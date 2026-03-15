@@ -86,6 +86,7 @@ RATE_LIMITS = {
     "resident_register": {"max_requests": 5, "window_seconds": 86400},  # 5 per day
     "resident_login": {"max_requests": 10, "window_seconds": 300},  # 10 per 5 minutes
     "admin_login": {"max_requests": 5, "window_seconds": 300},  # 5 per 5 minutes
+    "otp_request": {"max_requests": 3, "window_seconds": 900},  # 3 per 15 minutes
 }
 
 def check_rate_limit(identifier: str, endpoint: str, client_ip: str = None):

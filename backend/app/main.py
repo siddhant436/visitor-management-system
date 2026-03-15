@@ -8,6 +8,7 @@ import logging
 from app.routers import resident, visitor, admin
 from app.core.database import engine, Base
 from app.services.cleanup_service import start_cleanup_scheduler
+import app.models.otp  # noqa: F401 – registers OTPRecord with Base metadata
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
