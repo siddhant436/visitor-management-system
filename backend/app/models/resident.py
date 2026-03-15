@@ -1,6 +1,6 @@
 """Database model for residents"""
 
-from sqlalchemy import Column, Integer, String, DateTime, LargeBinary
+from sqlalchemy import Column, Integer, String, DateTime, LargeBinary, Boolean
 from datetime import datetime
 from app.core.database import Base
 
@@ -18,6 +18,10 @@ class Resident(Base):
     voice_sample = Column(LargeBinary, nullable=True)
     voice_embedding = Column(String, nullable=True)
     voice_registered = Column(Integer, default=0)
-    
+
+    # Email verification fields
+    email_verified = Column(Boolean, default=False)
+    otp_verified_email = Column(String, nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

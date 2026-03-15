@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     
     # Redis Settings (optional)
     REDIS_URL: str = "redis://localhost:6379/0"
+
+    # Email / SMTP Settings
+    SMTP_SERVER: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_SENDER_EMAIL: str = "noreply@visitormanagement.com"
     
     # Whisper Settings
     WHISPER_MODEL_SIZE: str = "base"

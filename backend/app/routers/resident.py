@@ -1,52 +1,101 @@
 """Router for resident operations"""
 
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+import json
 import os
-import logging
+from datetime import datetime
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-import os
-import json
-from datetime import datetime
-from pydantic import BaseModel
 from app.core.database import get_db
 from app.core.security import hash_password, verify_password, create_access_token
 from app.models.resident import Resident
-from app.schemas.resident import ResidentCreate, ResidentRead
-from app.utils.voice import extract_voice_embedding, compare_voice_embeddings
-from app.services.validation_service import validator, ValidationError
-from app.services.rate_limit_service import check_rate_limit
-import json
-from pydantic import BaseModel
 from app.schemas.resident import ResidentCreate, ResidentRead, ResidentLogin
-from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request, Query
-from app.core.database import SessionLocal
-from app.core.security import hash_password, verify_password, create_access_token
-from app.models.resident import Resident
-from app.schemas.resident import ResidentCreate, ResidentRead
 from app.utils.voice import extract_voice_embedding, compare_voice_embeddings
 from app.services.validation_service import validator, ValidationError
 from app.services.rate_limit_service import check_rate_limit
+from app.services.otp_service import request_otp, verify_otp, is_email_otp_verified
+from app.services.email_service import send_otp_email
 
 logger = logging.getLogger(__name__)
 
 
-# Add this at the top with other imports
 class LoginRequest(BaseModel):
     """Login request schema"""
     email: str
     password: str
-# Dependency to get the database session
-async def get_db():
-    async with SessionLocal() as session:
-        yield session
+
+
+class OTPRequest(BaseModel):
+    """Request body for sending an OTP"""
+    email: str
+
+
+class OTPVerify(BaseModel):
+    """Request body for verifying an OTP"""
+    email: str
+    otp_code: str
+
 
 router = APIRouter(prefix="/residents", tags=["Residents"])
+
+# ============ OTP ENDPOINTS ============
+
+@router.post("/request-otp", status_code=status.HTTP_200_OK)
+async def request_resident_otp(
+    body: OTPRequest,
+    request: Request = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """Send a 6-digit OTP to the given email for resident registration verification."""
+    try:
+        client_ip = request.client.host if request else "unknown"
+        check_rate_limit(body.email, "otp_request", client_ip)
+
+        validated_email = validator.validate_email(body.email)
+
+        otp_code = await request_otp(validated_email, db)
+        email_sent = await send_otp_email(validated_email, otp_code)
+
+        return {
+            "message": "OTP sent to your email address. It expires in 5 minutes.",
+            "email_sent": email_sent,
+        }
+
+    except HTTPException:
+        raise
+    except ValidationError as ve:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
+    except Exception as exc:
+        logger.error(f"Error sending OTP to {body.email}: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error sending OTP. Please try again.",
+        )
+
+
+@router.post("/verify-otp", status_code=status.HTTP_200_OK)
+async def verify_resident_otp(
+    body: OTPVerify,
+    db: AsyncSession = Depends(get_db)
+):
+    """Verify the OTP submitted by the user."""
+    try:
+        validated_email = validator.validate_email(body.email)
+        await verify_otp(validated_email, body.otp_code, db)
+        return {"message": "OTP verified successfully. You may now complete registration."}
+
+    except HTTPException:
+        raise
+    except ValidationError as ve:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
+    except Exception as exc:
+        logger.error(f"Error verifying OTP for {body.email}: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error verifying OTP. Please try again.",
+        )
 
 # ============ RESIDENT REGISTRATION & LOGIN ============
 
@@ -79,7 +128,15 @@ async def register_resident(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=str(ve)
             )
-        
+
+        # Require OTP verification before registration
+        otp_verified = await is_email_otp_verified(validated_email, db)
+        if not otp_verified:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email not verified. Please verify your email with OTP before registering."
+            )
+
         # Check if email already exists
         result = await db.execute(select(Resident).where(Resident.email == validated_email))
         if result.scalars().first():
@@ -99,7 +156,9 @@ async def register_resident(
             password_hash=hashed_password,
             name=validated_name,
             phone=validated_phone,
-            apartment_no=validated_apartment
+            apartment_no=validated_apartment,
+            email_verified=True,
+            otp_verified_email=validated_email,
         )
         db.add(new_resident)
         await db.commit()
