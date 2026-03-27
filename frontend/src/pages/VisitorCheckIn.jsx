@@ -1,8 +1,161 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 import axios from 'axios';
+import { User, Phone, MapPin, AlertCircle } from 'lucide-react';
+import { theme } from '../styles/theme';
+import { Button } from '../components/Button/Button';
+import { Input } from '../components/Input/Input';
+import { Card, CardBody } from '../components/Card/Card';
 
 const API_BASE_URL = 'http://localhost:8000';
+
+const Container = styled.div`
+  min-height: 100vh;
+  background: linear-gradient(135deg, ${theme.colors.background} 0%, ${theme.colors.backgroundAlt} 50%, ${theme.colors.surface} 100%);
+  padding: 100px ${theme.spacing[4]} ${theme.spacing[8]};
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: ${theme.colors.success};
+    border-radius: 50%;
+    top: -100px;
+    right: -100px;
+    opacity: 0.1;
+    filter: blur(100px);
+  }
+`;
+
+const Navbar = styled.nav`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(3, 7, 18, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid ${theme.colors.gray800};
+  padding: ${theme.spacing[4]};
+  z-index: 50;
+`;
+
+const NavContent = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const Logo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing[3]};
+  cursor: pointer;
+  h1 {
+    margin: 0;
+    background: linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+`;
+
+const ContentWrapper = styled.div`
+  max-width: 700px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+`;
+
+const Header = styled.div`
+  text-align: center;
+  margin-bottom: ${theme.spacing[8]};
+
+  .icon {
+    font-size: 64px;
+    margin-bottom: ${theme.spacing[4]};
+  }
+
+  h1 {
+    font-size: ${theme.fontSizes['3xl']};
+    margin-bottom: ${theme.spacing[2]};
+  }
+
+  p {
+    color: ${theme.colors.gray400};
+    margin: 0;
+  }
+`;
+
+const FormGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${theme.spacing[4]};
+
+  @media (max-width: ${theme.breakpoints.sm}) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: ${theme.spacing[3]} ${theme.spacing[4]};
+  background: ${theme.colors.gray800};
+  border: 2px solid ${theme.colors.gray700};
+  border-radius: ${theme.radius.lg};
+  color: ${theme.colors.white};
+  font-size: ${theme.fontSizes.base};
+  font-family: ${theme.fonts.primary};
+  cursor: pointer;
+  transition: all ${theme.transitions.base};
+
+  &:hover {
+    border-color: ${theme.colors.primary};
+  }
+
+  &:focus {
+    border-color: ${theme.colors.primary};
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+`;
+
+const AlertBox = styled.div`
+  background: ${props => props.type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)'};
+  border: 1px solid ${props => props.type === 'error' ? theme.colors.error : theme.colors.success};
+  border-radius: ${theme.radius.lg};
+  padding: ${theme.spacing[4]};
+  margin-bottom: ${theme.spacing[6]};
+  display: flex;
+  gap: ${theme.spacing[3]};
+  color: ${props => props.type === 'error' ? theme.colors.errorLight : theme.colors.successLight};
+  animation: slideInFromTop 0.3s ease-out;
+
+  @keyframes slideInFromTop {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+const QuickLinks = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${theme.spacing[4]};
+  margin-top: ${theme.spacing[6]};
+  padding-top: ${theme.spacing[6]};
+  border-top: 1px solid ${theme.colors.gray700};
+`;
 
 export default function VisitorCheckIn() {
   const navigate = useNavigate();
@@ -46,165 +199,139 @@ export default function VisitorCheckIn() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #030712 0%, #111827 50%, #1f2937 100%)', padding: '80px 16px 32px', position: 'relative', overflow: 'hidden' }}>
-      {/* Navbar */}
-      <nav className="navbar" style={{ position: 'fixed', top: 0, left: 0, right: 0 }}>
-        <div className="flex-between" style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 16px', height: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontSize: '24px' }} onClick={() => navigate('/')}>
-            <span>🏠</span>
-            <div className="gradient-text" style={{ fontSize: '20px', fontWeight: '700' }}>Visitor Check-In</div>
-          </div>
-          <button onClick={() => navigate('/')} className="btn btn-secondary btn-sm">
+    <>
+      <Navbar>
+        <NavContent>
+          <Logo onClick={() => navigate('/')}>
+            <span style={{ fontSize: '24px' }}>➕</span>
+            <h1>Visitor Check-In</h1>
+          </Logo>
+          <Button variant="secondary" size="sm" onClick={() => navigate('/')}>
             ← Back
-          </button>
-        </div>
-      </nav>
+          </Button>
+        </NavContent>
+      </Navbar>
 
-      {/* Animated backgrounds */}
-      <div style={{ position: 'absolute', width: '400px', height: '400px', background: '#22c55e', borderRadius: '50%', top: '-100px', right: '-100px', mixBlendMode: 'multiply', filter: 'blur(100px)', opacity: 0.1, animation: 'float 6s ease-in-out infinite' }}></div>
+      <Container>
+        <ContentWrapper>
+          <Header>
+            <div className="icon">➕</div>
+            <h1>Register Visitor</h1>
+            <p>Quick and easy visitor check-in</p>
+          </Header>
 
-      <div style={{ maxWidth: '700px', margin: '0 auto', zIndex: 10 }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '40px', marginTop: '20px' }} className="animate-fade-in">
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>➕</div>
-          <h1 style={{ fontSize: '36px', fontWeight: '700', marginBottom: '8px' }}>Register Visitor</h1>
-          <p style={{ color: '#9ca3af', fontSize: '16px' }}>Quick and easy visitor check-in</p>
-        </div>
-
-        {/* Card */}
-        <div className="card" style={{ padding: '40px 32px' }}>
-          {/* Messages */}
-          {error && (
-            <div style={{ background: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.3)', color: '#fca5a5', padding: '12px 16px', borderRadius: '8px', marginBottom: '20px', display: 'flex', gap: '8px' }}>
-              <span>❌</span>
-              <span>{String(error)}</span>
-            </div>
-          )}
-
-          {success && (
-            <div style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', color: '#86efac', padding: '12px 16px', borderRadius: '8px', marginBottom: '20px', display: 'flex', gap: '8px' }}>
-              <span>✅</span>
-              <span>{String(success)}</span>
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* Name */}
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#d1d5db', marginBottom: '8px' }}>
-                Visitor Name <span style={{ color: '#dc2626' }}>*</span>
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="John Doe"
-                required
-                className="input-field"
-                style={{ width: '100%' }}
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#d1d5db', marginBottom: '8px' }}>
-                Phone Number <span style={{ color: '#dc2626' }}>*</span>
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="9876543210"
-                required
-                className="input-field"
-                style={{ width: '100%' }}
-              />
-            </div>
-
-            {/* Purpose */}
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#d1d5db', marginBottom: '8px' }}>
-                Purpose <span style={{ color: '#dc2626' }}>*</span>
-              </label>
-              <select
-                name="purpose"
-                value={formData.purpose}
-                onChange={handleChange}
-                className="select-field"
-                style={{ width: '100%' }}
-              >
-                {purposes.map(p => (
-                  <option key={p} value={p}>
-                    {p.charAt(0).toUpperCase() + p.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Apartment */}
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#d1d5db', marginBottom: '8px' }}>
-                Apartment Number <span style={{ color: '#dc2626' }}>*</span>
-              </label>
-              <input
-                type="text"
-                name="apartment_no"
-                value={formData.apartment_no}
-                onChange={handleChange}
-                placeholder="325"
-                required
-                className="input-field"
-                style={{ width: '100%' }}
-              />
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn btn-primary"
-              style={{ width: '100%', marginTop: '12px', fontSize: '16px' }}
-            >
-              {loading ? (
-                <>
-                  <span style={{ display: 'inline-block', width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid white', borderRadius: '50%', animation: 'spin 0.8s linear infinite', marginRight: '8px' }}></span>
-                  Checking In...
-                </>
-              ) : (
-                '✅ Check In'
+          <Card hoverable={false}>
+            <CardBody>
+              {error && (
+                <AlertBox type="error">
+                  <AlertCircle size={20} style={{ flexShrink: 0 }} />
+                  <span>{error}</span>
+                </AlertBox>
               )}
-            </button>
-          </form>
 
-          {/* Quick Links */}
-          <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid rgba(75, 85, 99, 0.3)' }}>
-            <p style={{ color: '#9ca3af', marginBottom: '12px', fontSize: '14px', textAlign: 'center' }}>
-              Other check-in methods
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <button
-                onClick={() => navigate('/visitor/voice-check-in')}
-                className="btn btn-secondary"
-                style={{ fontSize: '14px' }}
-                type="button"
-              >
-                🎤 Voice Check-In
-              </button>
-              <button
-                onClick={() => navigate('/gate/entry')}
-                className="btn btn-secondary"
-                style={{ fontSize: '14px' }}
-                type="button"
-              >
-                🚪 Gate Entry
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+              {success && (
+                <AlertBox type="success">
+                  <span>✅</span>
+                  <span>{success}</span>
+                </AlertBox>
+              )}
+
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[4] }}>
+                <FormGrid>
+                  <Input
+                    label="Visitor Name"
+                    type="text"
+                    name="name"
+                    placeholder="John Doe"
+                    value={formData.name}
+                    onChange={handleChange}
+                    icon={User}
+                    disabled={loading}
+                    required
+                  />
+
+                  <Input
+                    label="Phone Number"
+                    type="tel"
+                    name="phone"
+                    placeholder="9876543210"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    icon={Phone}
+                    disabled={loading}
+                    required
+                  />
+                </FormGrid>
+
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: theme.fontSizes.sm,
+                    fontWeight: theme.fontWeights.semibold,
+                    color: theme.colors.white,
+                    marginBottom: theme.spacing[2]
+                  }}>
+                    Purpose
+                  </label>
+                  <Select
+                    name="purpose"
+                    value={formData.purpose}
+                    onChange={handleChange}
+                    disabled={loading}
+                  >
+                    {purposes.map(p => (
+                      <option key={p} value={p}>
+                        {p.charAt(0).toUpperCase() + p.slice(1)}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                <Input
+                  label="Apartment Number"
+                  type="text"
+                  name="apartment_no"
+                  placeholder="325"
+                  value={formData.apartment_no}
+                  onChange={handleChange}
+                  icon={MapPin}
+                  disabled={loading}
+                  required
+                />
+
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  style={{ width: '100%' }}
+                >
+                  {loading ? 'Checking In...' : '✅ Check In'}
+                </Button>
+
+                <QuickLinks>
+                  <Button
+                    variant="outline"
+                    size="md"
+                    onClick={() => navigate('/visitor/voice-check-in')}
+                    style={{ width: '100%' }}
+                  >
+                    🎤 Voice Check-In
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="md"
+                    onClick={() => navigate('/gate/entry')}
+                    style={{ width: '100%' }}
+                  >
+                    🚪 Gate Entry
+                  </Button>
+                </QuickLinks>
+              </form>
+            </CardBody>
+          </Card>
+        </ContentWrapper>
+      </Container>
+    </>
   );
 }

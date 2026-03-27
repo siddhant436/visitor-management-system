@@ -1,5 +1,139 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
+import { theme } from '../styles/theme';
+import { Button } from '../components/Button/Button';
+import { Card } from '../components/Card/Card';
+
+const Container = styled.div`
+  min-height: 100vh;
+  background: linear-gradient(135deg, ${theme.colors.background} 0%, ${theme.colors.backgroundAlt} 50%, ${theme.colors.surface} 100%);
+`;
+
+const Navbar = styled.nav`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(3, 7, 18, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid ${theme.colors.gray800};
+  padding: ${theme.spacing[4]};
+  z-index: 50;
+`;
+
+const NavContent = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const Logo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing[3]};
+  cursor: pointer;
+  h1 {
+    margin: 0;
+    background: linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+`;
+
+const Content = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 100px ${theme.spacing[4]} ${theme.spacing[12]};
+`;
+
+const Section = styled.section`
+  margin-bottom: ${theme.spacing[12]};
+`;
+
+const Title = styled.h2`
+  font-size: ${theme.fontSizes['3xl']};
+  font-weight: ${theme.fontWeights.bold};
+  text-align: center;
+  margin-bottom: ${theme.spacing[4]};
+  background: linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+`;
+
+const Subtitle = styled.p`
+  text-align: center;
+  color: ${theme.colors.gray400};
+  font-size: ${theme.fontSizes.lg};
+  margin-bottom: ${theme.spacing[8]};
+`;
+
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: ${theme.spacing[6]};
+`;
+
+const ScenarioCard = styled(Card)`
+  cursor: pointer;
+  transition: all ${theme.transitions.base};
+  border: 2px solid ${props => props.borderColor || theme.colors.gray700};
+
+  &:hover {
+    border-color: ${props => props.hoverColor || theme.colors.primary};
+    transform: translateY(-8px);
+  }
+
+  h4 {
+    font-size: ${theme.fontSizes.lg};
+    margin: ${theme.spacing[4]} 0 ${theme.spacing[2]};
+  }
+
+  p {
+    color: ${theme.colors.gray400};
+    margin-bottom: ${theme.spacing[4]};
+  }
+`;
+
+const TechStack = styled.div`
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border: 1px solid ${theme.colors.gray700};
+  border-radius: ${theme.radius.xl};
+  padding: ${theme.spacing[8]};
+`;
+
+const TechColumn = styled.div`
+  h4 {
+    font-weight: ${theme.fontWeights.bold};
+    margin-bottom: ${theme.spacing[3]};
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: ${theme.spacing[2]};
+    color: ${theme.colors.gray400};
+    font-size: ${theme.fontSizes.sm};
+
+    li::before {
+      content: '✅ ';
+      color: ${theme.colors.success};
+      margin-right: ${theme.spacing[2]};
+    }
+  }
+`;
+
+const GettingStarted = styled(Card)`
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%);
+  border-color: ${theme.colors.primary};
+`;
 
 export default function Demo() {
   const navigate = useNavigate();
@@ -9,25 +143,29 @@ export default function Demo() {
       title: '👤 Visitor Manual Check-In',
       description: 'A visitor fills out a form to check in',
       path: '/visitor/check-in',
-      color: '#2563eb'
+      borderColor: 'rgba(59, 130, 246, 0.3)',
+      hoverColor: theme.colors.primary
     },
     {
       title: '🎤 Visitor Voice Check-In',
       description: 'A visitor speaks to automatically check in',
       path: '/visitor/voice-check-in',
-      color: '#a855f7'
+      borderColor: 'rgba(168, 85, 247, 0.3)',
+      hoverColor: '#a855f7'
     },
     {
       title: '📋 Resident Registration',
       description: 'A resident creates a new account',
       path: '/resident/register',
-      color: '#16a34a'
+      borderColor: 'rgba(34, 197, 94, 0.3)',
+      hoverColor: theme.colors.success
     },
     {
       title: '🔐 Resident Login',
       description: 'A resident logs in with email and password',
       path: '/resident/login',
-      color: '#4f46e5'
+      borderColor: 'rgba(79, 70, 229, 0.3)',
+      hoverColor: theme.colors.primary
     }
   ];
 
@@ -65,170 +203,135 @@ export default function Demo() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(to br, #f0f9ff, #f0fdf4)' }}>
-      {/* Navigation */}
-      <nav style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '1rem' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4f46e5' }}>🏢 VMS - Demo</h1>
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              background: '#6b7280',
-              color: 'white',
-              padding: '0.5rem 1rem',
-              borderRadius: '0.5rem',
-              border: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            Back to Home
-          </button>
-        </div>
-      </nav>
+    <Container>
+      <Navbar>
+        <NavContent>
+          <Logo onClick={() => navigate('/')}>
+            <span style={{ fontSize: '24px' }}>🏢</span>
+            <h1>VMS - Demo</h1>
+          </Logo>
+          <Button variant="secondary" size="sm" onClick={() => navigate('/')}>
+            ← Back to Home
+          </Button>
+        </NavContent>
+      </Navbar>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
+      <Content>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-            Voice-Based Visitor Management System
-          </h2>
-          <p style={{ fontSize: '1.1rem', color: '#6b7280', maxWidth: '600px', margin: '0 auto' }}>
+        <Section style={{ textAlign: 'center', marginBottom: theme.spacing[12] }}>
+          <Title>Voice-Based Visitor Management System</Title>
+          <Subtitle>
             A complete demonstration of voice recognition and authentication features
-          </p>
-        </div>
+          </Subtitle>
+        </Section>
 
         {/* Scenarios */}
-        <div style={{ marginBottom: '3rem' }}>
-          <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Try These Scenarios:</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-            {scenarios.map((scenario, index) => (
-              <div
-                key={index}
-                style={{
-                  background: 'white',
-                  borderRadius: '0.5rem',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                  padding: '1.5rem',
-                  cursor: 'pointer',
-                  transition: 'transform 0.3s ease',
-                  border: `3px solid ${scenario.color}`
-                }}
+        <Section>
+          <Title>Try These Scenarios</Title>
+          <Subtitle>Explore different use cases and features</Subtitle>
+          <Grid>
+            {scenarios.map((scenario, idx) => (
+              <ScenarioCard
+                key={idx}
+                borderColor={scenario.borderColor}
+                hoverColor={scenario.hoverColor}
                 onClick={() => navigate(scenario.path)}
               >
-                <h4 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                  {scenario.title}
-                </h4>
-                <p style={{ color: '#6b7280', marginBottom: '1rem', minHeight: '2.5rem' }}>
-                  {scenario.description}
-                </p>
-                <button
-                  style={{
-                    background: scenario.color,
-                    color: 'white',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '0.375rem',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: '500',
-                    width: '100%'
+                <h4>{scenario.title}</h4>
+                <p>{scenario.description}</p>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(scenario.path);
                   }}
+                  style={{ width: '100%' }}
                 >
                   Try Now →
-                </button>
-              </div>
+                </Button>
+              </ScenarioCard>
             ))}
-          </div>
-        </div>
+          </Grid>
+        </Section>
 
         {/* Features */}
-        <div style={{ marginBottom: '3rem' }}>
-          <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Key Features:</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                style={{
-                  background: 'white',
-                  borderRadius: '0.5rem',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                  padding: '1.5rem',
-                  textAlign: 'center'
-                }}
-              >
-                <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>{feature.icon}</div>
-                <h4 style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                  {feature.title}
-                </h4>
-                <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                  {feature.description}
-                </p>
-              </div>
+        <Section>
+          <Title>Key Features</Title>
+          <Subtitle>Powerful capabilities for visitor management</Subtitle>
+          <Grid>
+            {features.map((feature, idx) => (
+              <Card key={idx} hoverable={true}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px', marginBottom: theme.spacing[4] }}>
+                    {feature.icon}
+                  </div>
+                  <h4 style={{ marginTop: 0 }}>{feature.title}</h4>
+                  <p style={{ color: theme.colors.gray400, margin: 0 }}>
+                    {feature.description}
+                  </p>
+                </div>
+              </Card>
             ))}
-          </div>
-        </div>
+          </Grid>
+        </Section>
 
         {/* Tech Stack */}
-        <div style={{
-          background: 'white',
-          borderRadius: '0.5rem',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          padding: '2rem'
-        }}>
-          <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Technology Stack:</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-            <div>
-              <h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Backend</h4>
-              <ul style={{ listStyle: 'none', padding: 0, color: '#6b7280', fontSize: '0.875rem' }}>
-                <li>✅ FastAPI</li>
-                <li>✅ SQLAlchemy ORM</li>
-                <li>✅ PostgreSQL</li>
-                <li>✅ Whisper API (OpenAI)</li>
-                <li>✅ MFCC Voice Embedding</li>
-                <li>✅ JWT Authentication</li>
-              </ul>
+        <Section>
+          <Title>Technology Stack</Title>
+          <TechStack>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: theme.spacing[6] }}>
+              <TechColumn>
+                <h4>Backend</h4>
+                <ul>
+                  <li>FastAPI</li>
+                  <li>SQLAlchemy ORM</li>
+                  <li>PostgreSQL</li>
+                  <li>Whisper API (OpenAI)</li>
+                  <li>MFCC Voice Embedding</li>
+                  <li>JWT Authentication</li>
+                </ul>
+              </TechColumn>
+              <TechColumn>
+                <h4>Frontend</h4>
+                <ul>
+                  <li>React.js</li>
+                  <li>React Router</li>
+                  <li>Axios</li>
+                  <li>MediaRecorder API</li>
+                  <li>Context API</li>
+                  <li>Local Storage</li>
+                </ul>
+              </TechColumn>
+              <TechColumn>
+                <h4>Libraries</h4>
+                <ul>
+                  <li>Librosa (MFCC)</li>
+                  <li>NumPy</li>
+                  <li>Scikit-learn</li>
+                  <li>Pydantic</li>
+                  <li>Argon2</li>
+                  <li>Python-Jose</li>
+                </ul>
+              </TechColumn>
             </div>
-            <div>
-              <h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Frontend</h4>
-              <ul style={{ listStyle: 'none', padding: 0, color: '#6b7280', fontSize: '0.875rem' }}>
-                <li>✅ React.js</li>
-                <li>✅ React Router</li>
-                <li>✅ Axios</li>
-                <li>✅ MediaRecorder API</li>
-                <li>✅ Context API</li>
-                <li>✅ Local Storage</li>
-              </ul>
-            </div>
-            <div>
-              <h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Libraries</h4>
-              <ul style={{ listStyle: 'none', padding: 0, color: '#6b7280', fontSize: '0.875rem' }}>
-                <li>✅ Librosa (MFCC)</li>
-                <li>✅ NumPy</li>
-                <li>✅ Scikit-learn</li>
-                <li>✅ Pydantic</li>
-                <li>✅ Argon2</li>
-                <li>✅ Python-Jose</li>
-              </ul>
-            </div>
-          </div>
-        </div>
+          </TechStack>
+        </Section>
 
         {/* Getting Started */}
-        <div style={{
-          background: 'linear-gradient(to right, #e0e7ff, #f0e7fe)',
-          borderRadius: '0.5rem',
-          padding: '2rem',
-          marginTop: '2rem'
-        }}>
-          <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>🚀 Getting Started:</h3>
-          <ol style={{ paddingLeft: '1.5rem', lineHeight: '1.8' }}>
-            <li><strong>New Visitor?</strong> Click "Visitor Manual Check-In" or "Visitor Voice Check-In"</li>
-            <li><strong>New Resident?</strong> Click "Resident Registration" to create an account</li>
-            <li><strong>Existing Resident?</strong> Click "Resident Login" with your credentials</li>
-            <li><strong>Upload Voice?</strong> Once logged in, go to dashboard and upload your voice sample</li>
-            <li><strong>Authenticate?</strong> Use your voice to authenticate instead of passwords</li>
-          </ol>
-        </div>
-      </div>
-    </div>
+        <Section>
+          <GettingStarted>
+            <h3 style={{ marginTop: 0 }}>🚀 Getting Started</h3>
+            <ol style={{ paddingLeft: theme.spacing[6], lineHeight: 1.8, color: theme.colors.gray300 }}>
+              <li><strong>New Visitor?</strong> Click "Visitor Manual Check-In" or "Visitor Voice Check-In"</li>
+              <li><strong>New Resident?</strong> Click "Resident Registration" to create an account</li>
+              <li><strong>Existing Resident?</strong> Click "Resident Login" with your credentials</li>
+              <li><strong>Upload Voice?</strong> Once logged in, go to dashboard and upload your voice sample</li>
+              <li><strong>Authenticate?</strong> Use your voice to authenticate instead of passwords</li>
+            </ol>
+          </GettingStarted>
+        </Section>
+      </Content>
+    </Container>
   );
 }

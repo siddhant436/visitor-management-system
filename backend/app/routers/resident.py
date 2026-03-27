@@ -1,54 +1,66 @@
-"""Router for resident operations"""
+"""Router for resident operations - Voice-focused"""
 
 import logging
+import os
+import json
+from datetime import datetime
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-import os
-import logging
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-import os
-import json
-from datetime import datetime
-from pydantic import BaseModel
+
 from app.core.database import get_db
+from app.core.config import get_settings
 from app.core.security import hash_password, verify_password, create_access_token
 from app.models.resident import Resident
-from app.schemas.resident import ResidentCreate, ResidentRead
-from app.utils.voice import extract_voice_embedding, compare_voice_embeddings
-from app.services.validation_service import validator, ValidationError
-from app.services.rate_limit_service import check_rate_limit
-import json
-from pydantic import BaseModel
 from app.schemas.resident import ResidentCreate, ResidentRead, ResidentLogin
-from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request, Query
-from app.core.database import SessionLocal
-from app.core.security import hash_password, verify_password, create_access_token
-from app.models.resident import Resident
-from app.schemas.resident import ResidentCreate, ResidentRead
-from app.utils.voice import extract_voice_embedding, compare_voice_embeddings
+from app.utils.voice import (
+    extract_voice_embedding,
+    compare_voice_embeddings,
+    validate_audio_file
+)
 from app.services.validation_service import validator, ValidationError
 from app.services.rate_limit_service import check_rate_limit
+from app.services.sendgrid_otp_service import SendGridOTPService
 
 logger = logging.getLogger(__name__)
 
+# ==================== INITIALIZE SERVICES ====================
 
-# Add this at the top with other imports
+settings = get_settings()
+
+if settings.sendgrid_api_key:
+    otp_service = SendGridOTPService(
+        sendgrid_api_key=settings.sendgrid_api_key,
+        from_email=settings.twilio_from_email or "noreply@visitormanagement.com"
+    )
+    logger.info("✅ SendGrid OTP Service initialized")
+else:
+    otp_service = None
+    logger.warning("⚠️ SendGrid API Key not configured")
+
+# ==================== SCHEMAS ====================
+
 class LoginRequest(BaseModel):
-    """Login request schema"""
+    """Login request"""
     email: str
     password: str
-# Dependency to get the database session
-async def get_db():
-    async with SessionLocal() as session:
-        yield session
+
+
+class ResidentCreateSchema(BaseModel):
+    """Resident creation"""
+    name: str
+    email: str
+    phone: str
+    apartment_no: str
+    password: str
+
+
+# ==================== ROUTER ====================
 
 router = APIRouter(prefix="/residents", tags=["Residents"])
 
-# ============ RESIDENT REGISTRATION & LOGIN ============
+# ==================== REGISTRATION & LOGIN ====================
 
 @router.post("/register", response_model=ResidentRead, status_code=status.HTTP_201_CREATED)
 async def register_resident(
@@ -58,13 +70,20 @@ async def register_resident(
 ):
     """Register a new resident"""
     try:
-        # Get client IP
         client_ip = request.client.host if request else "unknown"
-        
-        # Check rate limit
         check_rate_limit("anonymous", "resident_register", client_ip)
         
-        logger.info(f"Registering resident: {resident.email}")
+        logger.info(f"🔐 Registering resident: {resident.email}")
+        
+        # Check OTP verification
+        if otp_service:
+            is_email_verified = await otp_service.is_email_verified(db, resident.email)
+            if not is_email_verified:
+                logger.warning(f"❌ Email not verified: {resident.email}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email must be verified with OTP first"
+                )
         
         # Validate inputs
         try:
@@ -74,58 +93,37 @@ async def register_resident(
             validated_phone = validator.validate_phone(resident.phone)
             validated_apartment = validator.validate_apartment_number(resident.apartment_no)
         except ValidationError as ve:
-            logger.warning(f"Validation error: {ve}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(ve)
-            )
+            raise HTTPException(status_code=400, detail=str(ve))
         
-        # Check if email already exists
+        # Check duplicates
         result = await db.execute(select(Resident).where(Resident.email == validated_email))
         if result.scalars().first():
-            logger.warning(f"Email already registered: {validated_email}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
-        
-        # Hash password
-        logger.info("Hashing password...")
-        hashed_password = hash_password(validated_password)
+            raise HTTPException(status_code=400, detail="Email already registered")
         
         # Create resident
+        hashed_password = hash_password(validated_password)
         new_resident = Resident(
             email=validated_email,
             password_hash=hashed_password,
             name=validated_name,
             phone=validated_phone,
-            apartment_no=validated_apartment
+            apartment_no=validated_apartment,
+            email_verified=True
         )
         db.add(new_resident)
         await db.commit()
         await db.refresh(new_resident)
         
         logger.info(f"✅ Resident registered: {new_resident.id}")
-        
         return new_resident
     
     except HTTPException:
         raise
-    except ValidationError as ve:
-        logger.error(f"❌ Validation error: {ve}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(ve)
-        )
     except Exception as e:
         await db.rollback()
-        logger.error(f"❌ Error registering resident: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error registering resident"
-        )
+        logger.error(f"❌ Registration error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error registering resident")
+
 
 @router.post("/login")
 async def login_resident(
@@ -133,28 +131,23 @@ async def login_resident(
     request: Request = None,
     db: AsyncSession = Depends(get_db)
 ):
-    """Login a resident and return an access token"""
+    """Login a resident"""
     try:
-        # Get client IP
         client_ip = request.client.host if request else "unknown"
-        
-        # Check rate limit
         check_rate_limit(login_data.email, "resident_login", client_ip)
         
-        logger.info(f"Login attempt: {login_data.email}")
+        logger.info(f"🔐 Login attempt: {login_data.email}")
         
-        # Find resident by email
         result = await db.execute(select(Resident).where(Resident.email == login_data.email))
         resident = result.scalars().first()
         
         if not resident or not verify_password(login_data.password, resident.password_hash):
-            logger.warning(f"❌ Failed login attempt for: {login_data.email}")
+            logger.warning(f"❌ Failed login: {login_data.email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password"
             )
         
-        # Create access token
         access_token = create_access_token(
             data={
                 "user_id": resident.id,
@@ -177,42 +170,318 @@ async def login_resident(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error during login: {str(e)}")
+        logger.error(f"❌ Login error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error during login")
+
+
+# ==================== VOICE UPLOAD - MAIN FUNCTIONALITY ====================
+
+@router.post("/{resident_id}/upload-voice")
+async def upload_voice_sample(
+    resident_id: int,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Upload and process voice sample for resident.
+    
+    This endpoint:
+    1. Receives voice file upload
+    2. Validates audio file
+    3. Extracts MFCC voice embedding
+    4. Stores embedding in database
+    5. Sets voice_registered flag
+    """
+    temp_file_path = None
+    
+    try:
+        logger.info(f"🎤 Voice upload initiated for resident: {resident_id}")
+        
+        # ==================== FIND RESIDENT ====================
+        
+        result = await db.execute(select(Resident).where(Resident.id == resident_id))
+        resident = result.scalars().first()
+        
+        if not resident:
+            logger.error(f"❌ Resident not found: {resident_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Resident not found"
+            )
+        
+        logger.info(f"✅ Resident found: {resident.name} (ID: {resident_id})")
+        
+        # ==================== VALIDATE FILE ====================
+        
+        if not file or not file.filename:
+            logger.error("❌ No file provided")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No file provided"
+            )
+        
+        logger.info(f"📁 File received: {file.filename}")
+        
+        allowed_extensions = {'.wav', '.mp3', '.ogg', '.m4a', '.flac', '.aac'}
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        
+        if file_ext not in allowed_extensions:
+            logger.error(f"❌ Unsupported format: {file_ext}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported format. Allowed: {', '.join(allowed_extensions)}"
+            )
+        
+        logger.info(f"✅ File format supported: {file_ext}")
+        
+        # ==================== SAVE TEMPORARY FILE ====================
+        
+        temp_file_path = f"temp_voice_{resident_id}{file_ext}"
+        logger.info(f"💾 Saving temporary file: {temp_file_path}")
+        
+        try:
+            contents = await file.read()
+            
+            if not contents:
+                logger.error("❌ Uploaded file is empty")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Uploaded file is empty"
+                )
+            
+            with open(temp_file_path, "wb") as f:
+                f.write(contents)
+            
+            logger.info(f"✅ File saved: {len(contents):,} bytes")
+        
+        except Exception as save_error:
+            logger.error(f"❌ Error saving file: {str(save_error)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to save file"
+            )
+        
+        # ==================== VALIDATE AUDIO ====================
+        
+        logger.info("🔍 Validating audio file...")
+        validation_result = validate_audio_file(temp_file_path)
+        
+        if not validation_result["valid"]:
+            logger.error(f"❌ Audio validation failed: {validation_result['error']}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid audio: {validation_result['error']}"
+            )
+        
+        logger.info(f"✅ Audio validation passed: {validation_result}")
+        
+        # ==================== EXTRACT EMBEDDING ====================
+        
+        logger.info("🎵 Extracting voice embedding...")
+        embedding = extract_voice_embedding(temp_file_path)
+        
+        if not embedding:
+            logger.error("❌ Failed to extract embedding")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to extract voice features"
+            )
+        
+        logger.info(f"✅ Embedding extracted: {len(embedding)} coefficients")
+        
+        # ==================== STORE IN DATABASE ====================
+        
+        logger.info("💾 Storing embedding in database...")
+        resident.voice_embedding = json.dumps(embedding)
+        resident.voice_registered = True
+        resident.updated_at = datetime.utcnow()
+        
+        db.add(resident)
+        await db.commit()
+        await db.refresh(resident)
+        
+        logger.info(f"✅ Voice embedding stored successfully for resident: {resident_id}")
+        
+        return {
+            "status": "success",
+            "message": "✅ Voice uploaded and processed successfully",
+            "resident_id": resident.id,
+            "resident_name": resident.name,
+            "voice_registered": resident.voice_registered,
+            "embedding_size": len(embedding),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    
+    except HTTPException:
+        raise
+    
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"❌ Unexpected error: {str(e)}")
         import traceback
-        traceback.print_exc()
+        logger.error("Traceback:")
+        for line in traceback.format_exc().split('\n'):
+            logger.error(f"   {line}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error during login"
+            detail=f"Error processing voice: {str(e)}"
         )
+    
+    finally:
+        # ==================== CLEANUP ====================
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.remove(temp_file_path)
+                logger.info(f"🗑️ Temporary file removed: {temp_file_path}")
+            except Exception as cleanup_err:
+                logger.warning(f"⚠️ Could not delete temp file: {str(cleanup_err)}")
 
-# ============ RESIDENT CRUD OPERATIONS ============
+
+# ==================== VOICE AUTHENTICATION ====================
+
+@router.post("/{resident_id}/authenticate-voice")
+async def authenticate_resident_voice(
+    resident_id: int,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Authenticate resident using voice biometric.
+    Compares provided voice with registered voice.
+    """
+    temp_file_path = None
+    
+    try:
+        logger.info(f"🔐 Voice authentication for resident: {resident_id}")
+        
+        # Find resident
+        result = await db.execute(select(Resident).where(Resident.id == resident_id))
+        resident = result.scalars().first()
+        
+        if not resident:
+            raise HTTPException(status_code=404, detail="Resident not found")
+        
+        if not resident.voice_registered or not resident.voice_embedding:
+            logger.warning(f"⚠️ No registered voice for resident {resident_id}")
+            raise HTTPException(
+                status_code=400,
+                detail="Resident has no registered voice"
+            )
+        
+        logger.info(f"✅ Resident found with registered voice")
+        
+        # Save uploaded file
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        temp_file_path = f"temp_auth_voice_{resident_id}{file_ext}"
+        
+        contents = await file.read()
+        with open(temp_file_path, "wb") as f:
+            f.write(contents)
+        
+        logger.info(f"✅ Authentication audio saved")
+        
+        # Validate audio
+        validation_result = validate_audio_file(temp_file_path)
+        if not validation_result["valid"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid audio: {validation_result['error']}"
+            )
+        
+        # Extract embedding
+        logger.info("🎵 Extracting authentication voice embedding...")
+        provided_embedding = extract_voice_embedding(temp_file_path)
+        
+        if not provided_embedding:
+            raise HTTPException(
+                status_code=400,
+                detail="Failed to process authentication voice"
+            )
+        
+        logger.info(f"✅ Authentication embedding extracted")
+        
+        # Compare
+        logger.info("🔍 Comparing voice embeddings...")
+        resident_embedding = json.loads(resident.voice_embedding)
+        comparison_result = compare_voice_embeddings(resident_embedding, provided_embedding)
+        
+        similarity = comparison_result['similarity']
+        is_match = comparison_result['is_match']
+        confidence = comparison_result['confidence']
+        
+        logger.info(f"📊 Similarity: {similarity:.4f}, Is Match: {is_match}")
+        
+        if is_match:
+            logger.info(f"✅ Voice authentication successful for resident: {resident_id}")
+            
+            access_token = create_access_token(
+                data={
+                    "user_id": resident.id,
+                    "user_type": "resident",
+                    "email": resident.email
+                }
+            )
+            
+            return {
+                "status": "authenticated",
+                "message": "✅ Voice authentication successful",
+                "resident_id": resident.id,
+                "resident_name": resident.name,
+                "apartment_no": resident.apartment_no,
+                "similarity_score": similarity,
+                "confidence": confidence,
+                "access_token": access_token,
+                "token_type": "bearer"
+            }
+        else:
+            logger.warning(f"❌ Voice authentication failed: {similarity:.4f} < 0.75")
+            
+            return {
+                "status": "rejected",
+                "message": "❌ Voice does not match",
+                "resident_id": resident.id,
+                "similarity_score": similarity,
+                "confidence": confidence,
+                "threshold": 0.75
+            }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Authentication error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Authentication error")
+    
+    finally:
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.remove(temp_file_path)
+            except:
+                pass
+
+
+# ==================== CRUD OPERATIONS ====================
 
 @router.get("/{resident_id}", response_model=ResidentRead)
 async def get_resident(
     resident_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    """Get a resident by their ID"""
+    """Get resident by ID"""
     try:
         result = await db.execute(select(Resident).where(Resident.id == resident_id))
         resident = result.scalars().first()
         
         if not resident:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Resident not found"
-            )
+            raise HTTPException(status_code=404, detail="Resident not found")
         
         return resident
     
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error fetching resident: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error fetching resident"
-        )
+        logger.error(f"❌ Error: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching resident")
+
 
 @router.get("/")
 async def list_residents(
@@ -222,9 +491,8 @@ async def list_residents(
 ):
     """List all residents"""
     try:
-        logger.info(f"📋 list_residents called with skip={skip}, limit={limit}")
+        logger.info(f"📋 Listing residents (skip={skip}, limit={limit})")
         
-        # Execute query
         result = await db.execute(
             select(Resident)
             .order_by(Resident.created_at.desc())
@@ -233,39 +501,34 @@ async def list_residents(
         )
         residents = result.scalars().all()
         
-        logger.info(f"✅ Found {len(residents)} residents in database")
+        logger.info(f"✅ Found {len(residents)} residents")
         
-        if not residents:
-            logger.warning("⚠️ No residents found in database")
-            return []
-        
-        # Convert to dictionaries for JSON serialization
         residents_list = []
         for r in residents:
-            resident_dict = {
-                'id': r.id,
-                'name': r.name,
-                'email': r.email,
-                'phone': r.phone,
-                'apartment_no': r.apartment_no,
-                'voice_registered': getattr(r, 'voice_registered', False),
-                'created_at': r.created_at.isoformat() if hasattr(r, 'created_at') and r.created_at else None,
-                'updated_at': r.updated_at.isoformat() if hasattr(r, 'updated_at') and r.updated_at else None,
-            }
-            residents_list.append(resident_dict)
-            logger.debug(f"  - Resident: {resident_dict['name']} (apt {resident_dict['apartment_no']})")
+            try:
+                resident_dict = {
+                    'id': r.id,
+                    'name': r.name,
+                    'email': r.email,
+                    'phone': r.phone,
+                    'apartment_no': r.apartment_no,
+                    'email_verified': bool(r.email_verified),
+                    'voice_registered': bool(r.voice_registered),
+                    'created_at': r.created_at.isoformat() if r.created_at else None,
+                    'updated_at': r.updated_at.isoformat() if r.updated_at else None,
+                }
+                residents_list.append(resident_dict)
+            except Exception as item_error:
+                logger.error(f"❌ Error converting resident {r.id}: {str(item_error)}")
+                continue
         
-        logger.info(f"✅ Returning {len(residents_list)} residents")
         return residents_list
-        
+    
     except Exception as e:
         logger.error(f"❌ Error listing residents: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error listing residents: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail="Error listing residents")
+
+
 @router.put("/{resident_id}", response_model=ResidentRead)
 async def update_resident(
     resident_id: int,
@@ -274,35 +537,20 @@ async def update_resident(
     apartment_no: str = None,
     db: AsyncSession = Depends(get_db)
 ):
-    """Update a resident's information"""
+    """Update resident"""
     try:
         result = await db.execute(select(Resident).where(Resident.id == resident_id))
         resident = result.scalars().first()
         
         if not resident:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Resident not found"
-            )
+            raise HTTPException(status_code=404, detail="Resident not found")
         
-        # Validate inputs if provided
         if name:
-            try:
-                resident.name = validator.validate_name(name)
-            except ValidationError as ve:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
-        
+            resident.name = validator.validate_name(name)
         if phone:
-            try:
-                resident.phone = validator.validate_phone(phone)
-            except ValidationError as ve:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
-        
+            resident.phone = validator.validate_phone(phone)
         if apartment_no:
-            try:
-                resident.apartment_no = validator.validate_apartment_number(apartment_no)
-            except ValidationError as ve:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ve))
+            resident.apartment_no = validator.validate_apartment_number(apartment_no)
         
         resident.updated_at = datetime.utcnow()
         db.add(resident)
@@ -310,34 +558,28 @@ async def update_resident(
         await db.refresh(resident)
         
         logger.info(f"✅ Resident updated: {resident_id}")
-        
         return resident
     
     except HTTPException:
         raise
     except Exception as e:
         await db.rollback()
-        logger.error(f"❌ Error updating resident: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error updating resident"
-        )
+        logger.error(f"❌ Error updating: {e}")
+        raise HTTPException(status_code=500, detail="Error updating resident")
+
 
 @router.delete("/{resident_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_resident(
     resident_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    """Delete a resident by their ID"""
+    """Delete resident"""
     try:
         result = await db.execute(select(Resident).where(Resident.id == resident_id))
         resident = result.scalars().first()
         
         if not resident:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Resident not found"
-            )
+            raise HTTPException(status_code=404, detail="Resident not found")
         
         await db.delete(resident)
         await db.commit()
@@ -348,416 +590,5 @@ async def delete_resident(
         raise
     except Exception as e:
         await db.rollback()
-        logger.error(f"❌ Error deleting resident: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error deleting resident"
-        )
-
-# ============ VOICE OPERATIONS ============
-
-@router.post("/{resident_id}/upload-voice")
-async def upload_voice_sample(
-    resident_id: int,
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db)
-):
-    """Upload a voice sample for speaker verification"""
-    temp_file_path = f"temp_voice_{resident_id}.wav"
-    
-    try:
-        logger.info(f"Uploading voice sample for resident: {resident_id}")
-        
-        # Find resident
-        result = await db.execute(select(Resident).where(Resident.id == resident_id))
-        resident = result.scalars().first()
-        
-        if not resident:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Resident not found"
-            )
-        
-        # Save uploaded file temporarily
-        contents = await file.read()
-        with open(temp_file_path, "wb") as f:
-            f.write(contents)
-        
-        logger.info(f"Extracting voice embedding...")
-        
-        # Extract voice embedding
-        embedding = extract_voice_embedding(temp_file_path)
-        
-        if not embedding:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to process voice sample"
-            )
-        
-        # Store voice embedding
-        resident.voice_embedding = json.dumps(embedding) if isinstance(embedding, list) else embedding
-        resident.voice_registered = 1
-        resident.updated_at = datetime.utcnow()
-        
-        db.add(resident)
-        await db.commit()
-        await db.refresh(resident)
-        
-        logger.info(f"✅ Voice sample uploaded for resident: {resident_id}")
-        
-        return {
-            "status": "success",
-            "message": "Voice sample uploaded successfully",
-            "resident_id": resident.id,
-            "voice_registered": resident.voice_registered
-        }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        await db.rollback()
-        logger.error(f"❌ Error uploading voice sample: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error uploading voice sample: {str(e)}"
-        )
-    
-    finally:
-        # Clean up temporary file
-        if os.path.exists(temp_file_path):
-            try:
-                os.remove(temp_file_path)
-            except:
-                pass
-
-@router.post("/{resident_id}/authenticate-voice")
-async def authenticate_resident_voice(
-    resident_id: int,
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    Authenticate a resident using their voice.
-    Compares the provided voice sample with the resident's registered voice.
-    """
-    temp_file_path = f"temp_auth_voice_{resident_id}.wav"
-    
-    try:
-        logger.info(f"Voice authentication attempt for resident: {resident_id}")
-        
-        # Step 1: Find resident
-        result = await db.execute(select(Resident).where(Resident.id == resident_id))
-        resident = result.scalars().first()
-        
-        if not resident:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Resident not found"
-            )
-        
-        if not resident.voice_registered or not resident.voice_embedding:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Resident has not registered a voice sample yet"
-            )
-        
-        # Step 2: Save uploaded voice sample temporarily
-        contents = await file.read()
-        with open(temp_file_path, "wb") as f:
-            f.write(contents)
-        
-        # Step 3: Extract embedding from the voice sample
-        logger.info("Extracting voice embedding from provided sample...")
-        provided_embedding = extract_voice_embedding(temp_file_path)
-        
-        if not provided_embedding:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to process voice sample"
-            )
-        
-        # Step 4: Compare embeddings
-        logger.info("Comparing voice embeddings...")
-        
-        # Parse resident embedding if it's JSON string
-        resident_embedding = resident.voice_embedding
-        if isinstance(resident_embedding, str):
-            try:
-                resident_embedding = json.loads(resident_embedding)
-            except:
-                pass
-        
-        similarity_score = compare_voice_embeddings(resident_embedding, provided_embedding)
-        
-        is_authenticated = similarity_score >= 0.75
-        
-        # Step 5: Return authentication result
-        if is_authenticated:
-            # Create access token for authenticated resident
-            access_token = create_access_token(
-                data={
-                    "user_id": resident.id,
-                    "user_type": "resident",
-                    "email": resident.email
-                }
-            )
-            
-            logger.info(f"✅ Voice authentication successful for resident: {resident_id}")
-            
-            return {
-                "status": "success",
-                "message": "Voice authentication successful",
-                "resident_id": resident.id,
-                "resident_name": resident.name,
-                "apartment_no": resident.apartment_no,
-                "similarity_score": round(float(similarity_score), 4),
-                "access_token": access_token,
-                "token_type": "bearer"
-            }
-        else:
-            logger.warning(f"❌ Voice authentication failed for resident: {resident_id}")
-            
-            return {
-                "status": "failed",
-                "message": "Voice authentication failed - voice does not match",
-                "resident_id": resident.id,
-                "similarity_score": round(float(similarity_score), 4),
-                "threshold": 0.75,
-                "note": f"Similarity score {round(float(similarity_score), 4)} is below threshold 0.75"
-            }
-    
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        logger.error(f"❌ Error in voice authentication: {e}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error processing voice authentication: {str(e)}"
-        )
-    
-    finally:
-        # Cleanup temporary file
-        if os.path.exists(temp_file_path):
-            try:
-                os.remove(temp_file_path)
-            except:
-                pass
-
-@router.post("/{resident_id}/verify-visitor-voice")
-async def verify_visitor_voice(
-    resident_id: int,
-    visitor_id: int,
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    Verify if a visitor's voice matches a resident's registered voice.
-    Used for voice-based visitor verification/authentication.
-    """
-    temp_file_path = f"temp_visitor_verify_{resident_id}_{visitor_id}.wav"
-    
-    try:
-        logger.info(f"Verifying visitor {visitor_id} voice for resident {resident_id}")
-        
-        # Step 1: Find resident
-        result = await db.execute(select(Resident).where(Resident.id == resident_id))
-        resident = result.scalars().first()
-        
-        if not resident:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Resident not found"
-            )
-        
-        if not resident.voice_registered or not resident.voice_embedding:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Resident has not registered a voice sample"
-            )
-        
-        # Step 2: Save visitor voice sample temporarily
-        contents = await file.read()
-        with open(temp_file_path, "wb") as f:
-            f.write(contents)
-        
-        # Step 3: Extract embedding from visitor voice
-        logger.info("Extracting voice embedding from visitor...")
-        visitor_embedding = extract_voice_embedding(temp_file_path)
-        
-        if not visitor_embedding:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to process visitor voice sample"
-            )
-        
-        # Step 4: Compare with resident's voice
-        logger.info("Comparing visitor voice with resident's registered voice...")
-        
-        # Parse resident embedding if it's JSON string
-        resident_embedding = resident.voice_embedding
-        if isinstance(resident_embedding, str):
-            try:
-                resident_embedding = json.loads(resident_embedding)
-            except:
-                pass
-        
-        similarity_score = compare_voice_embeddings(resident_embedding, visitor_embedding)
-        
-        is_match = similarity_score >= 0.75
-        
-        logger.info(f"Voice verification result: {'Match' if is_match else 'No Match'} (Score: {similarity_score:.4f})")
-        
-        # Step 5: Return verification result
-        return {
-            "status": "match" if is_match else "no_match",
-            "resident_id": resident_id,
-            "resident_name": resident.name,
-            "visitor_id": visitor_id,
-            "similarity_score": round(float(similarity_score), 4),
-            "threshold": 0.75,
-            "is_voice_match": is_match,
-            "message": f"Visitor voice {'matches' if is_match else 'does not match'} resident's voice"
-        }
-    
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        logger.error(f"❌ Error in visitor voice verification: {e}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error processing visitor voice verification: {str(e)}"
-        )
-    
-    finally:
-        # Cleanup temporary file
-        if os.path.exists(temp_file_path):
-            try:
-                os.remove(temp_file_path)
-            except:
-                pass
-
-
-
-# ============ SCHEMAS ============
-
-class ResidentCreate(BaseModel):
-    """Resident creation schema"""
-    name: str
-    email: str
-    phone: str
-    apartment_no: str
-    password: str
-
-# ============ MANAGEMENT ENDPOINTS ============
-
-@router.post("/register")
-async def register_resident_admin(
-    resident_data: ResidentCreate,
-    db: AsyncSession = Depends(get_db)
-):
-    """Register a new resident (admin endpoint)"""
-    try:
-        # Check if email already exists
-        result = await db.execute(select(Resident).where(Resident.email == resident_data.email))
-        if result.scalars().first():
-            raise HTTPException(status_code=400, detail="Email already registered")
-        
-        # Check if phone already exists
-        result = await db.execute(select(Resident).where(Resident.phone == resident_data.phone))
-        if result.scalars().first():
-            raise HTTPException(status_code=400, detail="Phone already registered")
-        
-        from app.core.security import hash_password
-        
-        # Create resident
-        resident = Resident(
-            name=resident_data.name,
-            email=resident_data.email,
-            phone=resident_data.phone,
-            apartment_no=resident_data.apartment_no,
-            password_hash=hash_password(resident_data.password)
-        )
-        
-        db.add(resident)
-        await db.commit()
-        await db.refresh(resident)
-        
-        logger.info(f"✅ Resident registered: {resident.id} - {resident.name}")
-        
-        return {
-            'id': resident.id,
-            'name': resident.name,
-            'email': resident.email,
-            'apartment_no': resident.apartment_no
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error registering resident: {str(e)}")
-        await db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.delete("/{resident_id}")
-async def delete_resident(
-    resident_id: int,
-    db: AsyncSession = Depends(get_db)
-):
-    """Delete a resident"""
-    try:
-        result = await db.execute(select(Resident).where(Resident.id == resident_id))
-        resident = result.scalars().first()
-        
-        if not resident:
-            raise HTTPException(status_code=404, detail="Resident not found")
-        
-        await db.delete(resident)
-        await db.commit()
-        
-        logger.info(f"Deleted resident: {resident_id}")
-        
-        return {"message": "Resident deleted successfully"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error deleting resident: {str(e)}")
-        await db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.put("/{resident_id}")
-async def update_resident(
-    resident_id: int,
-    resident_data: dict,
-    db: AsyncSession = Depends(get_db)
-):
-    """Update a resident"""
-    try:
-        result = await db.execute(select(Resident).where(Resident.id == resident_id))
-        resident = result.scalars().first()
-        
-        if not resident:
-            raise HTTPException(status_code=404, detail="Resident not found")
-        
-        # Update fields
-        if 'name' in resident_data:
-            resident.name = resident_data['name']
-        if 'phone' in resident_data:
-            resident.phone = resident_data['phone']
-        if 'apartment_no' in resident_data:
-            resident.apartment_no = resident_data['apartment_no']
-        
-        await db.commit()
-        await db.refresh(resident)
-        
-        logger.info(f"Updated resident: {resident_id}")
-        
-        return resident
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error updating resident: {str(e)}")
-        await db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"❌ Error deleting: {e}")
+        raise HTTPException(status_code=500, detail="Error deleting resident")

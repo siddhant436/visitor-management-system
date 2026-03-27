@@ -1,14 +1,213 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import { visitorAPI } from '../services/api';
+import { theme } from '../styles/theme';
+import { Button } from '../components/Button/Button';
+import { Card, CardBody } from '../components/Card/Card';
+
+const Container = styled.div`
+  min-height: 100vh;
+  background: linear-gradient(135deg, ${theme.colors.background} 0%, ${theme.colors.backgroundAlt} 50%, ${theme.colors.surface} 100%);
+  padding: 100px ${theme.spacing[4]} ${theme.spacing[8]};
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: #a855f7;
+    border-radius: 50%;
+    top: -100px;
+    right: -100px;
+    opacity: 0.1;
+    filter: blur(100px);
+  }
+`;
+
+const Navbar = styled.nav`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(3, 7, 18, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid ${theme.colors.gray800};
+  padding: ${theme.spacing[4]};
+  z-index: 50;
+`;
+
+const NavContent = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const Logo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing[3]};
+  cursor: pointer;
+  h1 {
+    margin: 0;
+    background: linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+`;
+
+const ContentWrapper = styled.div`
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+`;
+
+const Header = styled.div`
+  text-align: center;
+  margin-bottom: ${theme.spacing[8]};
+
+  .icon {
+    font-size: 64px;
+    margin-bottom: ${theme.spacing[4]};
+    animation: float 3s ease-in-out infinite;
+  }
+
+  h1 {
+    font-size: ${theme.fontSizes['3xl']};
+    margin-bottom: ${theme.spacing[2]};
+  }
+
+  p {
+    color: ${theme.colors.gray400};
+    margin: 0;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+`;
+
+const RecorderSection = styled.div`
+  text-align: center;
+  margin: ${theme.spacing[8]} 0;
+`;
+
+const StatusDisplay = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${theme.spacing[3]};
+  min-height: 80px;
+  margin-bottom: ${theme.spacing[6]};
+  font-size: ${theme.fontSizes.lg};
+  font-weight: ${theme.fontWeights.semibold};
+
+  .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    animation: ${props => props.recording ? 'pulse 1s infinite' : 'none'};
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+`;
+
+const MicButton = styled.button`
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 48px;
+  margin: ${theme.spacing[4]} auto;
+  background: ${props => {
+    if (props.recording) return theme.colors.error;
+    if (props.hasAudio) return theme.colors.success;
+    return theme.colors.primary;
+  }};
+  border: none;
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: all ${theme.transitions.base};
+  opacity: ${props => props.disabled ? 0.6 : 1};
+
+  &:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+`;
+
+const AudioPlayer = styled.audio`
+  width: 100%;
+  margin: ${theme.spacing[4]} 0;
+`;
+
+const ResultSection = styled.div`
+  background: rgba(31, 41, 55, 0.5);
+  border: 1px solid ${theme.colors.gray700};
+  border-radius: ${theme.radius.xl};
+  padding: ${theme.spacing[6]};
+  margin: ${theme.spacing[6]} 0;
+
+  h3 {
+    margin-top: 0;
+    color: ${theme.colors.primary};
+  }
+
+  .result-item {
+    display: flex;
+    justify-content: space-between;
+    padding: ${theme.spacing[3]} 0;
+    border-bottom: 1px solid ${theme.colors.gray700};
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .label {
+      color: ${theme.colors.gray400};
+      font-weight: ${theme.fontWeights.semibold};
+    }
+
+    .value {
+      color: ${theme.colors.white};
+    }
+  }
+`;
+
+const InstructionsBox = styled(Card)`
+  background: rgba(14, 165, 233, 0.1);
+  border: 2px solid rgba(14, 165, 233, 0.3);
+  margin-bottom: ${theme.spacing[6]};
+
+  p {
+    color: #7dd3fc;
+  }
+`;
 
 export default function VoiceCheckIn() {
   const navigate = useNavigate();
   const { isRecording, audioBlob, audioURL, startRecording, stopRecording, resetRecording } = useVoiceRecorder();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [success, setSuccess] = useState(false);
   const [result, setResult] = useState(null);
   const [recordingTime, setRecordingTime] = useState(0);
 
@@ -19,9 +218,7 @@ export default function VoiceCheckIn() {
         setRecordingTime(prev => prev + 1);
       }, 1000);
     }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [isRecording]);
 
   const formatTime = (seconds) => {
@@ -31,7 +228,6 @@ export default function VoiceCheckIn() {
   };
 
   const handleStartRecording = () => {
-    console.log('Starting recording...');
     resetRecording();
     setRecordingTime(0);
     setMessage('');
@@ -40,27 +236,21 @@ export default function VoiceCheckIn() {
   };
 
   const handleStopRecording = () => {
-    console.log('Stopping recording...');
     stopRecording();
   };
 
   const handleSubmit = async () => {
     if (!audioBlob) {
       setMessage('❌ Please record audio first');
-      setSuccess(false);
       return;
     }
 
-    console.log('Submitting audio blob:', audioBlob);
     setLoading(true);
     setMessage('');
 
     try {
-      console.log('Calling visitorAPI.voiceCheckIn...');
       const response = await visitorAPI.voiceCheckIn(audioBlob);
-      console.log('Response:', response.data);
       
-      setSuccess(true);
       setResult(response.data);
       
       if (response.data.status === 'success') {
@@ -71,8 +261,6 @@ export default function VoiceCheckIn() {
         setMessage(`❌ ${response.data.message}`);
       }
     } catch (error) {
-      console.error('Error:', error);
-      setSuccess(false);
       const errorMsg = error.response?.data?.detail || error.message || 'Voice check-in failed';
       setMessage(`❌ ${errorMsg}`);
     } finally {
@@ -81,237 +269,163 @@ export default function VoiceCheckIn() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(to right, #f3e8ff, #dbeafe)' }}>
-      {/* Navigation */}
-      <nav style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '1rem' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4f46e5' }}>🏢 Visitor Management</h1>
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              background: '#6b7280',
-              color: 'white',
-              padding: '0.5rem 1rem',
-              borderRadius: '0.5rem',
-              border: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            Home
-          </button>
-        </div>
-      </nav>
+    <>
+      <Navbar>
+        <NavContent>
+          <Logo onClick={() => navigate('/')}>
+            <span style={{ fontSize: '24px' }}>🎤</span>
+            <h1>Voice Check-In</h1>
+          </Logo>
+          <Button variant="secondary" size="sm" onClick={() => navigate('/')}>
+            ← Back
+          </Button>
+        </NavContent>
+      </Navbar>
 
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
-        <div style={{
-          background: 'white',
-          borderRadius: '0.5rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-          padding: '2rem'
-        }}>
-          <h2 style={{ fontSize: '2rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '2rem' }}>
-            🎤 Voice-Based Check-In
-          </h2>
+      <Container>
+        <ContentWrapper>
+          <Header>
+            <div className="icon">🎤</div>
+            <h1>Voice-Based Check-In</h1>
+            <p>Speak to automatically register as a visitor</p>
+          </Header>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {/* Instructions */}
-            <div style={{
-              background: '#dbeafe',
-              border: '1px solid #0284c7',
-              borderRadius: '0.375rem',
-              padding: '1rem'
-            }}>
-              <h3 style={{ fontWeight: 'bold', color: '#0c4a6e', marginBottom: '0.5rem' }}>📝 Instructions:</h3>
-              <p style={{ color: '#0c4a6e', fontSize: '0.875rem', margin: 0 }}>
-                Say something like: "Hi, my name is John Doe, my phone is 1234567890, I'm here for a meeting at apartment 301"
-              </p>
-            </div>
+          <Card hoverable={false}>
+            <CardBody>
+              <InstructionsBox>
+                <h3 style={{ marginTop: 0 }}>📝 Instructions</h3>
+                <p style={{ margin: '0 0 8px 0' }}>
+                  Say something like: "Hi, my name is John Doe, my phone is 1234567890, I'm here for a meeting at apartment 301"
+                </p>
+              </InstructionsBox>
 
-            {/* Voice Recorder */}
-            <div style={{ textAlign: 'center' }}>
-              {/* Status */}
-              <div style={{ marginBottom: '1.5rem', minHeight: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {isRecording ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{
-                      width: '0.75rem',
-                      height: '0.75rem',
-                      background: '#dc2626',
-                      borderRadius: '50%',
-                      animation: 'pulse 1s infinite'
-                    }}></div>
-                    <span style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#dc2626' }}>
-                      Recording... {formatTime(recordingTime)}
-                    </span>
+              <RecorderSection>
+                <StatusDisplay recording={isRecording}>
+                  {isRecording ? (
+                    <>
+                      <div className="status-dot" style={{ background: theme.colors.error }} />
+                      <span style={{ color: theme.colors.error }}>
+                        Recording... {formatTime(recordingTime)}
+                      </span>
+                    </>
+                  ) : audioBlob ? (
+                    <>
+                      <span style={{ color: theme.colors.success }}>✅ Recording Complete</span>
+                    </>
+                  ) : (
+                    <span style={{ color: theme.colors.gray400 }}>Ready to Record</span>
+                  )}
+                </StatusDisplay>
+
+                <MicButton
+                  onClick={isRecording ? handleStopRecording : handleStartRecording}
+                  disabled={loading}
+                  recording={isRecording}
+                  hasAudio={!!audioBlob}
+                  title={isRecording ? 'Stop Recording' : 'Start Recording'}
+                >
+                  {isRecording ? '⏹️' : audioBlob ? '✅' : '🎤'}
+                </MicButton>
+
+                {audioURL && (
+                  <div style={{ marginTop: theme.spacing[6] }}>
+                    <AudioPlayer src={audioURL} controls />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        resetRecording();
+                        setRecordingTime(0);
+                        setMessage('');
+                        setResult(null);
+                      }}
+                      style={{ marginTop: theme.spacing[3] }}
+                    >
+                      Record Again
+                    </Button>
                   </div>
-                ) : audioBlob ? (
-                  <span style={{ fontSize: '1.125rem', fontWeight: '600', color: '#16a34a' }}>
-                    ✅ Recording Complete
-                  </span>
-                ) : (
-                  <span style={{ fontSize: '1.125rem', fontWeight: '600', color: '#374151' }}>
-                    Ready to Record
-                  </span>
                 )}
-              </div>
+              </RecorderSection>
 
-              {/* Microphone Button */}
-              <button
-                onClick={isRecording ? handleStopRecording : handleStartRecording}
-                disabled={loading}
-                style={{
-                  width: '120px',
-                  height: '120px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '2.5rem',
-                  marginBottom: '1.5rem',
-                  marginLeft: 'auto',
-                  marginRight: 'auto',
-                  background: isRecording ? '#dc2626' : audioBlob ? '#16a34a' : '#4f46e5',
-                  border: 'none',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 10px 15px rgba(0,0,0,0.1)',
-                  transition: 'all 0.3s ease',
-                  opacity: loading ? 0.6 : 1
-                }}
-                title={isRecording ? 'Stop Recording' : 'Start Recording'}
-              >
-                {isRecording ? '⏹️' : audioBlob ? '✅' : '🎤'}
-              </button>
-
-              {/* Audio Playback */}
-              {audioURL && (
-                <div style={{ marginTop: '1.5rem' }}>
-                  <audio src={audioURL} controls style={{ width: '100%', marginBottom: '1rem' }} />
-                  <button
-                    onClick={() => {
-                      resetRecording();
-                      setRecordingTime(0);
-                      setMessage('');
-                      setResult(null);
-                    }}
-                    style={{
-                      color: '#4f46e5',
-                      background: 'none',
-                      border: 'none',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      textDecoration: 'underline',
-                      fontSize: '0.875rem'
-                    }}
-                  >
-                    Record Again
-                  </button>
+              {message && (
+                <div style={{
+                  padding: theme.spacing[4],
+                  borderRadius: theme.radius.lg,
+                  background: message.includes('✅') 
+                    ? 'rgba(34, 197, 94, 0.1)' 
+                    : message.includes('⚠️')
+                    ? 'rgba(249, 115, 22, 0.1)'
+                    : 'rgba(239, 68, 68, 0.1)',
+                  color: message.includes('✅') 
+                    ? theme.colors.successLight
+                    : message.includes('⚠️')
+                    ? '#fbbf24'
+                    : theme.colors.errorLight,
+                  border: `1px solid ${
+                    message.includes('✅') 
+                      ? 'rgba(34, 197, 94, 0.3)'
+                      : message.includes('⚠️')
+                      ? 'rgba(249, 115, 22, 0.3)'
+                      : 'rgba(239, 68, 68, 0.3)'
+                  }`
+                }}>
+                  {message}
                 </div>
               )}
-            </div>
 
-            {/* Message */}
-            {message && (
-              <div style={{
-                padding: '1rem',
-                borderRadius: '0.375rem',
-                background: success ? '#dcfce7' : '#fee2e2',
-                color: success ? '#166534' : '#991b1b',
-                border: `1px solid ${success ? '#86efac' : '#fca5a5'}`
-              }}>
-                {message}
-              </div>
-            )}
-
-            {/* Result */}
-            {result && (
-              <div style={{
-                background: '#f3f4f6',
-                borderRadius: '0.375rem',
-                padding: '1.5rem',
-                border: '1px solid #e5e7eb'
-              }}>
-                <h3 style={{ fontWeight: 'bold', marginBottom: '1rem', marginTop: 0 }}>Extraction Results:</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.875rem', textAlign: 'left' }}>
-                  <p style={{ margin: 0 }}><strong>Transcribed:</strong> {result.transcribed_text}</p>
+              {result && (
+                <ResultSection>
+                  <h3>Extraction Results</h3>
+                  <div className="result-item">
+                    <span className="label">Transcribed:</span>
+                    <span className="value">{result.transcribed_text}</span>
+                  </div>
                   {result.extracted_info && (
                     <>
-                      <p style={{ margin: 0 }}><strong>Name:</strong> {result.extracted_info.name || 'Not detected'}</p>
-                      <p style={{ margin: 0 }}><strong>Phone:</strong> {result.extracted_info.phone || 'Not detected'}</p>
-                      <p style={{ margin: 0 }}><strong>Purpose:</strong> {result.extracted_info.purpose || 'Not detected'}</p>
-                      <p style={{ margin: 0 }}><strong>Apartment:</strong> {result.extracted_info.apartment_no || 'Not detected'}</p>
+                      <div className="result-item">
+                        <span className="label">Name:</span>
+                        <span className="value">{result.extracted_info.name || 'Not detected'}</span>
+                      </div>
+                      <div className="result-item">
+                        <span className="label">Phone:</span>
+                        <span className="value">{result.extracted_info.phone || 'Not detected'}</span>
+                      </div>
+                      <div className="result-item">
+                        <span className="label">Purpose:</span>
+                        <span className="value">{result.extracted_info.purpose || 'Not detected'}</span>
+                      </div>
+                      <div className="result-item">
+                        <span className="label">Apartment:</span>
+                        <span className="value">{result.extracted_info.apartment_no || 'Not detected'}</span>
+                      </div>
                     </>
                   )}
-                </div>
+                </ResultSection>
+              )}
+
+              <div style={{ display: 'flex', gap: theme.spacing[4], marginTop: theme.spacing[6] }}>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={handleSubmit}
+                  disabled={!audioBlob || loading}
+                  style={{ flex: 1 }}
+                >
+                  {loading ? '⏳ Processing...' : '✅ Submit Check-In'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => navigate('/')}
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </Button>
               </div>
-            )}
-
-            {/* Buttons */}
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button
-                onClick={handleSubmit}
-                disabled={!audioBlob || loading}
-                style={{
-                  flex: 1,
-                  background: '#4f46e5',
-                  color: 'white',
-                  padding: '0.75rem',
-                  borderRadius: '0.375rem',
-                  border: 'none',
-                  cursor: (!audioBlob || loading) ? 'not-allowed' : 'pointer',
-                  fontWeight: '500',
-                  opacity: (!audioBlob || loading) ? 0.5 : 1,
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                {loading ? '⏳ Processing...' : '✅ Submit Voice Check-In'}
-              </button>
-              <button
-                onClick={() => navigate('/')}
-                style={{
-                  flex: 1,
-                  background: '#6b7280',
-                  color: 'white',
-                  padding: '0.75rem',
-                  borderRadius: '0.375rem',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontWeight: '500'
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-
-          <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #e5e7eb', textAlign: 'center' }}>
-            <p style={{ color: '#6b7280', margin: 0 }}>
-              Prefer manual check-in?{' '}
-              <button
-                onClick={() => navigate('/visitor/check-in')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#4f46e5',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  textDecoration: 'underline'
-                }}
-              >
-                Use Form Check-In
-              </button>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      `}</style>
-    </div>
+            </CardBody>
+          </Card>
+        </ContentWrapper>
+      </Container>
+    </>
   );
 }

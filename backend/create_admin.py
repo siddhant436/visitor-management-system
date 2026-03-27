@@ -32,10 +32,10 @@ async def create_admin():
         try:
             # Create admin
             admin = Admin(
-                username="admin",
-                email="admin@example.com",
-                full_name="System Administrator",
-                password_hash=hash_password("Admin@12345"),
+                username="admin2",
+                email="Admin2@example.com",
+                full_name="System Administrator2",
+                password_hash=hash_password("Admin2@12345"),
                 is_active=True
             )
             
@@ -43,9 +43,9 @@ async def create_admin():
             await session.commit()
             
             print(f"✅ Admin created successfully!")
-            print(f"   Email: admin@example.com")
-            print(f"   Password: Admin@12345")
-            print(f"   Username: admin")
+            print(f"   Email: admin2@example.com")
+            print(f"   Password: Admin2@12345")
+            print(f"   Username: admin2")
         except Exception as e:
             await session.rollback()
             print(f"❌ Error creating admin: {str(e)}")

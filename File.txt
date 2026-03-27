@@ -1,0 +1,1520 @@
+%% ============================================================
+%%  Blockchain-Based Framework for Employee Experience
+%%  Certificate Verification — Full LaTeX Source
+%%  Author : Md Samirul Islam (23MT0215)
+%%  Guide  : Prof. Arup Kumar Pal
+%%  IIT (ISM), Dhanbad — M.Tech CSE, May 2025
+%% ============================================================
+
+\documentclass[12pt,a4paper]{report}
+
+%% ── Packages ────────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{indentfirst}
+\usepackage[backend=bibtex, style=ieee]{biblatex}
+\addbibresource{references.bib}
+
+%% ── Page style ──────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+%% ── Spacing ─────────────────────────────────────────────────
+\onehalfspacing
+
+%% ── Colour for headings (blue like original) ────────────────
+\definecolor{iitblue}{RGB}{0,0,139}
+
+%% ── Chapter / section title format ─────────────────────────
+\titleformat{\chapter}[display]
+  {\normalfont\Large\bfseries}{\chaptername\ \thechapter}{12pt}{\Large}
+
+%% ============================================================
+\begin{document}
+
+%% ============================================================
+%%  PAGE 1 — TITLE PAGE
+%% ============================================================
+\begin{titlepage}
+  \centering
+  \vspace*{1.5cm}
+
+  {\LARGE\bfseries Blockchain-Based Framework for\\[6pt]
+   Employee Experience Certificate\\[6pt]
+   Verification\par}
+
+  \vspace{2cm}
+  {\large By\par}
+  \vspace{0.4cm}
+  {\large\bfseries Md Samirul Islam\\
+   (Admission No.\ 23MT0215)\par}
+
+  \vspace{2cm}
+  {\large Under the supervision of\par}
+  \vspace{0.3cm}
+  {\large\bfseries Prof.\ Arup Kumar Pal\par}
+
+  \vspace{1.5cm}
+  % Institute logo — place iit_logo.png in the same directory
+  \includegraphics[width=0.28\textwidth]{iit_logo.png}
+
+  \vspace{1.2cm}
+  {\large\bfseries Dissertation\par}
+
+  \vspace{0.6cm}
+  {\large Submitted to\par}
+  \vspace{0.4cm}
+  {\large\bfseries
+   Department of Computer Science and Engineering\\
+   Indian Institute of Technology (Indian School of Mines),\\
+   Dhanbad\par}
+
+  \vspace{1cm}
+  {\large For the award of the degree of\\[4pt]
+   \textbf{Master of Technology}\par}
+
+  \vspace{1cm}
+  {\large May, 2025\par}
+\end{titlepage}
+
+%% ============================================================
+%%  PAGE 2 — CERTIFICATE FOR THE FINAL VERSION OF DISSERTATION
+%% ============================================================
+\newpage
+\thispagestyle{empty}
+
+\begin{center}
+  \includegraphics[width=0.12\textwidth]{iit_logo.png}\hfill
+  {\small\textbf{INDIAN INSTITUTE OF TECHNOLOGY (INDIAN SCHOOL OF MINES) DHANBAD}}\\[6pt]
+  \rule{\linewidth}{0.6pt}\\[10pt]
+  {\large\bfseries\color{red} CERTIFICATE FOR THE FINAL VERSION OF DISSERTATION}\\[4pt]
+  {\small\textbf{(To be submitted at the time of Final Dissertation Submission)}}
+\end{center}
+
+\vspace{1cm}
+\noindent\rule{\linewidth}{0.4pt}
+
+\vspace{1.5cm}
+\noindent
+This is to certify that the Dissertation entitled \textbf{Blockchain-Based Framework for
+Employee Experience Certificate Verification}, being submitted Indian Institute of
+Technology (Indian School of Mines), Dhanbad, by Mr \textbf{Md Samirul Islam}, Admission
+No \textbf{23MT0215} for the award of Degree of \textbf{Master of Technology} from IIT(ISM),
+Dhanbad, is a bonafide work carried out by him, in the Department of Computer Science
+and Engineering, IIT(ISM), Dhanbad, under my supervision and guidance. The dissertation
+has fulfilled all the requirements as per the regulations of this institute and, in my
+opinion, has reached the standard needed for submission. The results embodied in this
+dissertation have not been submitted to any other university or institute for the award
+of any degree or diploma.
+
+\vspace{3cm}
+\begin{minipage}[t]{0.45\linewidth}
+  \rule{6cm}{0.4pt}\\[4pt]
+  \textbf{Prof.\ Chiranjeev Kumar}\\
+  Head of the Department\\
+  Department of Computer\\
+  Science and Engineering\\
+  Indian Institute of Technology (Indian\\
+  School of Mines), Dhanbad
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\linewidth}
+  \rule{6cm}{0.4pt}\\[4pt]
+  \textbf{Prof.\ Arup Kumar Pal}\\
+  Associate Professor\\
+  Department of Computer\\
+  Science and Engineering\\
+  Indian Institute of Technology (Indian\\
+  School of Mines) Dhanbad
+\end{minipage}
+
+%% ============================================================
+%%  PAGE 3 — DECLARATION BY THE STUDENT
+%% ============================================================
+\newpage
+\thispagestyle{empty}
+
+\begin{center}
+  \includegraphics[width=0.12\textwidth]{iit_logo.png}\hfill
+  {\small\textbf{INDIAN INSTITUTE OF TECHNOLOGY (INDIAN SCHOOL OF MINES) DHANBAD}}\\[6pt]
+  \rule{\linewidth}{0.6pt}\\[10pt]
+  {\large\bfseries\color{red} DECLARATION BY THE STUDENT}\\[4pt]
+  {\small\textbf{(To be submitted at the time of Final Dissertation Submission)}}
+\end{center}
+
+\vspace{1cm}
+\noindent\rule{\linewidth}{0.4pt}
+
+\vspace{1.5cm}
+\noindent
+I hereby declare that the work which is being presented in this dissertation entitled
+\textbf{Blockchain-Based Framework for Employee Experience Certificate Verification}
+in partial fulfillment of the requirements for the award of the degree of \textbf{Master of
+Technology} in \textbf{Computer Science and Engineering} is an authentic record of my own
+work carried out during the period from \textbf{July 2024} to \textbf{April 2025} under the supervision
+of \textbf{Prof.\ Arup Kumar Pal}, Department of \textbf{Computer Science and Engineering},
+Indian Institute of Technology (Indian School of Mines), Dhanbad, Jharkhand, India.
+
+\vspace{0.8cm}
+\noindent
+I acknowledge that I have read and understood the UGC (Promotion of Academic Integrity
+and Prevention of Plagiarism in Higher Educational Institutions) Regulations,
+2018. These Regulations were published in the Indian Official Gazette on 31\textsuperscript{st} July, 2018.
+
+\vspace{0.8cm}
+\noindent
+I confirm that this Dissertation has been checked for plagiarism using the online plagiarism
+checking software provided by the Institute. At the end of the Dissertation, a copy
+of the summary report demonstrating similarities in content and its potential source (if
+any) generated online using plagiarism checking software is enclosed. I herewith confirm
+that the Dissertation has less than 10\% similarity according to the plagiarism checking
+software's report and meets the MoE/UGC Regulations as well as the Institute's rules
+for plagiarism.
+
+\vspace{0.8cm}
+\noindent
+I further declare that no portion of the dissertation or its data will be published without
+the Institute's or Guide's permission. I have not previously applied for any other degree
+or award using the topics and findings described in my dissertation.
+
+\vspace{2.5cm}
+\noindent
+\rule{6cm}{0.4pt}\\[4pt]
+\textbf{Signature of the Student}\\
+Name: \textbf{Md Samirul Islam}\\
+Admission No: \textbf{23MT0215}\\
+Department: \textbf{Computer Science and Engineering}
+
+%% ============================================================
+%%  PAGE 4 — CERTIFICATE FOR CLASSIFIED DATA
+%% ============================================================
+\newpage
+\thispagestyle{empty}
+
+\begin{center}
+  \includegraphics[width=0.12\textwidth]{iit_logo.png}\hfill
+  {\small\textbf{INDIAN INSTITUTE OF TECHNOLOGY (INDIAN SCHOOL OF MINES) DHANBAD}}\\[6pt]
+  \rule{\linewidth}{0.6pt}\\[10pt]
+  {\large\bfseries\color{red} CERTIFICATE FOR CLASSIFIED DATA}\\[4pt]
+  {\small\textbf{(To be submitted at the time of Final Dissertation Submission)}}
+\end{center}
+
+\vspace{1cm}
+\noindent\rule{\linewidth}{0.4pt}
+
+\vspace{2cm}
+\noindent
+This is to certify that the Dissertation entitled \textbf{Blockchain-Based Framework for
+Employee Experience Certificate Verification} being submitted to the Indian Institute
+of Technology (Indian School of Mines), Dhanbad by \textbf{Md Samirul Islam} for award
+of Master Degree in \textbf{Computer Science and Engineering} does not contain any classified
+information. This work is original and yet not been submitted to any institution
+or university for the award of any degree.
+
+\vspace{4cm}
+\begin{minipage}[t]{0.45\linewidth}
+  \rule{6cm}{0.4pt}\\[4pt]
+  Signature of the guide
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\linewidth}
+  \rule{6cm}{0.4pt}\\[4pt]
+  Signature of the Student
+\end{minipage}
+
+%% ============================================================
+%%  PAGE 5 — CERTIFICATE REGARDING ENGLISH CHECKING
+%% ============================================================
+\newpage
+\thispagestyle{empty}
+
+\begin{center}
+  \includegraphics[width=0.12\textwidth]{iit_logo.png}\hfill
+  {\small\textbf{INDIAN INSTITUTE OF TECHNOLOGY (INDIAN SCHOOL OF MINES) DHANBAD}}\\[6pt]
+  \rule{\linewidth}{0.6pt}\\[10pt]
+  {\large\bfseries\color{red} CERTIFICATE REGARDING ENGLISH CHECKING}\\[4pt]
+  {\small\textbf{(To be submitted at the time of Final Dissertation Submission)}}
+\end{center}
+
+\vspace{1cm}
+\noindent\rule{\linewidth}{0.4pt}
+
+\vspace{1.5cm}
+\noindent
+This is to certify that the Dissertation entitled \textbf{Blockchain-Based Framework for
+Employee Experience Certificate Verification} being submitted to the Indian Institute
+of Technology (Indian School of Mines), Dhanbad by \textbf{Md Samirul Islam} Admission
+No \textbf{23MT0215}, for the award of Master of Technology has been thoroughly checked for
+quality of English and logical sequencing of topics.
+
+\noindent
+It is hereby certified that the standard of English is good and that grammar and typos
+have been thoroughly checked.
+
+\vspace{3cm}
+\begin{minipage}[t]{0.45\linewidth}
+  \rule{6cm}{0.4pt}\\[4pt]
+  Signature of Guide(s)\\
+  Name: Prof.\ Arup Kumar Pal\\
+  Date: 13/05/2025
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\linewidth}
+  \rule{6cm}{0.4pt}\\[4pt]
+  Signature of Student\\
+  Name: Md Samirul Islam\\
+  Date: 13/05/2025
+\end{minipage}
+
+%% ============================================================
+%%  PAGES 6-7 — COPYRIGHT AND CONSENT FORM
+%% ============================================================
+\newpage
+\thispagestyle{empty}
+
+\begin{center}
+  \includegraphics[width=0.12\textwidth]{iit_logo.png}\hfill
+  {\small\textbf{INDIAN INSTITUTE OF TECHNOLOGY (INDIAN SCHOOL OF MINES) DHANBAD}}\\[6pt]
+  \rule{\linewidth}{0.6pt}\\[10pt]
+  {\large\bfseries\color{red} COPYRIGHT AND CONSENT FORM}\\[4pt]
+  {\small\textbf{(To be submitted at the time of Final Dissertation Submission)}}
+\end{center}
+
+\vspace{1cm}
+\noindent\rule{\linewidth}{0.4pt}
+
+\vspace{1cm}
+\noindent
+To ensure uniformity of treatment among all contributors, other forms may not be substituted
+for this form, nor may any wording of the form be changed. This form is intended
+for original material submitted to the IIT (ISM), Dhanbad and must accompany any such
+material in order to be published by the ISM. Please read the form carefully and keep a
+copy for your files.
+
+\noindent
+TITLE OF DISSERTATION: \textbf{BLOCKCHAIN-BASED FRAMEWORK FOR EMPLOYEE
+EXPERIENCE CERTIFICATE VERIFICATION}
+
+\vspace{0.8cm}
+\begin{flushright}
+AUTHOR'S NAME AND ADDRESS: Md Samirul Islam\\
+Pashchim Fatepur, Magnavita\\
+Karandighi\\
+Uttar Dinajpur,\\
+West Bengal, 733201
+\end{flushright}
+
+\vspace{0.6cm}
+\noindent\textbf{COPYRIGHT TRANSFER}
+
+\vspace{0.4cm}
+\noindent
+1.\enspace The undersigned hereby assigns to Indian Institute of Technology (Indian School
+of Mines), Dhanbad all rights under copyright that may exist in and to: (a) the above
+Work, including any revised or expanded derivative works submitted to the ISM by the
+undersigned based on the work; and (b) any associated written or multimedia components
+or other enhancements accompanying the work.
+
+\vspace{0.6cm}
+\noindent\textbf{CONSENT AND RELEASE}
+
+\vspace{0.4cm}
+\noindent
+2.\enspace In the event the undersigned makes a presentation based upon the work at a
+conference hosted or sponsored in whole or in part by the IIT (ISM) Dhanbad, the undersigned,
+in consideration for his/her participation in the conference, hereby grants the
+ISM the unlimited, worldwide, irrevocable permission to use, distribute, publish, license,
+exhibit, record, digitize, broadcast, reproduce and archive; in any format or medium,
+whether now known or hereafter developed: (a) his/her presentation and comments at
+the conference; (b) any written materials or multimedia files used in connection with
+his/her presentation; and (c) any recorded interviews of him/her (collectively, the ``Presentation'').
+The permission granted includes the transcription and reproduction of the
+Presentation for inclusion in products sold or distributed by IIT(ISM) Dhanbad and live
+or recorded broadcast of the Presentation during or after the conference.
+
+\vspace{0.4cm}
+\noindent
+3.\enspace In connection with the permission granted in Section 2, the undersigned hereby grants
+IIT (ISM) Dhanbad the unlimited, worldwide, irrevocable right to use his/her name, picture,
+likeness, voice and biographical information as part of the advertisement, distribution
+and sale of products incorporating the Work or Presentation, and releases IIT (ISM)
+Dhanbad from any claim based on right of privacy or publicity.
+
+\vspace{0.4cm}
+\noindent
+4.\enspace The undersigned hereby warrants that the Work and Presentation (collectively, the
+``Materials'') are original and that he/she is the author of the Materials. To the extent
+the Materials incorporate text passages, figures, data or other material from the works
+of others, the undersigned has obtained any necessary permissions. Where necessary, the
+undersigned has obtained all third party permissions and consents to grant the license
+above and has provided copies of such permissions and consents to IIT (ISM) Dhanbad.
+
+\vspace{0.6cm}
+\noindent\textbf{GENERAL TERMS}
+
+\begin{itemize}
+  \item The undersigned represents that he/she has the power and authority to make and
+        execute this assignment.
+  \item The undersigned agrees to indemnify and hold harmless the IIT (ISM) Dhanbad
+        from any damage or expense that may arise in the event of a breach of any of the
+        warranties set forth above.
+  \item In the event the above work is not accepted and published by the IIT (ISM) Dhanbad
+        or is withdrawn by the author(s) before acceptance by the IIT(ISM) Dhanbad,
+        the foregoing copyright transfer shall become null and void and all materials embodying
+        the Work submitted to the IIT(ISM) Dhanbad will be destroyed.
+  \item For jointly authored Works, all joint authors should sign, or one of the authors
+        should sign as authorized agent for the others.
+\end{itemize}
+
+\vspace{2cm}
+\begin{flushright}
+  \rule{6cm}{0.4pt}\\[4pt]
+  Signature of the Student
+\end{flushright}
+
+%% ============================================================
+%%  PAGE 8 — ACKNOWLEDGEMENTS
+%% ============================================================
+\newpage
+\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+\thispagestyle{plain}
+
+It is indeed a great pleasure to express my sincere thanks to my guide \textbf{Prof.\ Arup Kumar
+Pal}, Associate Professor, Department of Computer Science and Engineering, Indian
+Institute of Technology (Indian School of Mines), Dhanbad, for his continuous support
+and guidance in this thesis. He was always there to listen and encourage me. He showed
+me different ways to approach a research problem and the need to be persistent to accomplish
+my goal. He inspired me to think through the problems and generate new ideas.
+I will always be grateful to him for his valuable supervision and guidance.
+
+I would like to thank \textbf{Prof.\ Chiranjeev Kumar} (Head of Department) and all the
+faculty members of Computer Science and Engineering, Indian Institute of Technology
+(Indian School of Mines), Dhanbad, for their valuable support and suggestions towards
+the research work.
+
+I am grateful to my family members and friends for their constant support and motivation.
+
+Last, but not least, I want to thank my parents for giving me life in the first place and
+for educating me. I would like to thank my family for their unconditional support and
+encouragement to pursue my interests. It is a pleasure to express my deepest gratitude
+to all those who inspired me in the successful completion of the project.
+
+\vspace{2cm}
+\noindent
+\textbf{Md Samirul Islam}\\
+23MT0215\\
+M.Tech.\ CSE\\
+IIT ISM, Dhanbad\\
+Date: 6 May 2025
+
+%% ============================================================
+%%  PAGE 9 — ABSTRACT
+%% ============================================================
+\newpage
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\thispagestyle{plain}
+
+In today's digital era, verifying the authenticity of employee experience certificates remains
+a challenge for organizations. Employers require a fast and cost-effective means
+of confirming the qualifications of potential employees, but the current system still relies
+on outmoded systems of manual confirmation, direct communication with previous
+employers, or services from third-party organizations, and reliance on paper or easily
+photocopied documents. These traditional systems are not only time-consuming but are
+also susceptible to deception and incorrect information. This thesis presents a blockchain
+system to verify employee experience or service certificates through a consortium blockchain
+and a proof-of-stake consensus algorithm. It is secure, tamper-evident, and decentralized
+by presenting digitally encrypted and signed certificates on the blockchain presented by
+previous employers. The former employer gives the decryption key and transaction ID to
+the employee, and the employee gives the decryption key and transaction ID to the new
+employer, who can verify the validity and integrity of the certificate on the blockchain.
+Consortium blockchain simply gives verified and trusted employers the right to access
+the network, as proof-of-stake provides secure and rapid consensus. Using the power of
+blockchain theory, cryptographic encryption, and digital signatures, this thesis constructs
+a modern, scalable, and tamper-evident employment confirmation process to enable individuals
+and trigger HR activity.
+
+%% ============================================================
+%%  TABLE OF CONTENTS / LIST OF FIGURES / LIST OF TABLES
+%% ============================================================
+\tableofcontents
+\listoffigures
+\listoftables
+
+%% ============================================================
+%%  LIST OF ABBREVIATIONS
+%% ============================================================
+\newpage
+\chapter*{List of Abbreviations}
+\addcontentsline{toc}{chapter}{List of Abbreviations}
+\thispagestyle{plain}
+
+\begin{tabular}{@{}ll}
+  \textbf{AES}    & Advanced Encryption Standard \\
+  \textbf{PoS}    & Proof of Stake \\
+  \textbf{PoW}    & Proof of Work \\
+  \textbf{SHA-256}& Secure Hash Algorithm 256-bit \\
+  \textbf{ECDSA}  & Elliptic Curve Digital Signature Algorithm \\
+  \textbf{ECC}    & Elliptic Curve Cryptography \\
+  \textbf{RSA}    & Rivest--Shamir--Adleman \\
+  \textbf{ECDHP}  & Elliptic Curve Diffie--Hellman Protocol \\
+\end{tabular}
+
+%% ============================================================
+%%  CHAPTER 1 — INTRODUCTION
+%% ============================================================
+\chapter{Introduction}
+
+The current digital society with worldwide connections brings about unprecedented changes
+in how work and employment patterns develop. Remote work makes employees more mobile
+because it connects them to flexible global platforms, which merge with international
+job markets. The availability of new work options through modern work environments
+creates a complex verification challenge for organizations to authenticate worldwide job
+credentials. User credential verification processes face difficulties because of outdated
+methods, which include previous employer interviews through telephone or email systems,
+and requiring background checks from agencies and paper documents, yet these processes
+are delayed by human errors while being vulnerable to document modification.
+Justified candidate selection from these recruitment methods causes extended timelines,
+together with higher administrative expenses. A defective process creates problems for
+genuine candidates along with employers because it makes it challenging to demonstrate
+real work history at a fast pace. Institutions that implement digital technology acceleration
+need modern processes that will improve their traditional methods for human resources
+management and document authentication. The employment verification method needs to
+be updated to enhance its operational ability because its outdated system poses limitations.
+Blockchain technology deployment implements superior authentication protocols to supersede
+traditional authentication procedures. Employment records achieve safe decentralization
+when stored through distributed systems because blockchain presents multiple security
+elements, including distributed consensus, immutability, transparency, and cryptographic
+security features alongside decentralization.
+
+The presented solution proposes a consortium blockchain-based framework to achieve
+employee experience certificate verification. A consortium of trusted and verified organizations
+unites to form the suggested framework instead of separating their employee certificates
+from central government-run databases or employer-issued documentation. The
+shared distributed ledger is managed by these entities, which record employee certificates.
+Through consortium architecture, the system achieves data accessibility only for legitimate
+stakeholders, so employers obtain transparency benefits while reducing blockchain
+public records' privacy risks. The method eliminates verification dependency on third
+parties as it shortens the verification period from multiple days to mere minutes. One
+key aspect of the proposed system includes the proof-of-stake (PoS) consensus protocol.
+The PoS method differs from PoW due to its reduced power consumption requirement by
+allowing network members to validate transactions based on their system stake holdings.
+This method promotes scalability alongside energy efficiency, follows sustainability objectives,
+and requires applicability to real-time enterprise-grade applications. The speed
+of transaction finality provided by PoS permits systems to expand their participant base
+and handle numerous transaction events at high performance levels.
+
+\begin{figure}[h!]
+  \centering
+  % Replace with actual figure: \includegraphics[width=0.85\textwidth]{fig1_1.png}
+  \fbox{\parbox{0.85\textwidth}{\centering\vspace{2cm}
+    [Figure: Traditional Employment Verification Workflow]\vspace{2cm}}}
+  \caption{Traditional Employment verification workflow}
+  \label{fig:traditional_workflow}
+\end{figure}
+
+The heart of this solution utilizes a workflow that puts employee empowerment together
+with privacy protection first. The employer issues a digital certificate with encryption
+protection to its employee when that person departs the organization. The blockchain
+securely stores the certificate after its creation, then issues the employee both the transaction
+ID. The employee provides prospective employers with the transaction ID and decryption
+key after the job application, so those employers can get the blockchain-stored
+encrypted certificate while validating the digital signature to decrypt and read the document
+without needing to consult the former organization. This method gets rid of both
+the obstacles and dependencies that tend to cause problems in standard verification procedures.
+This employment record management system decentralizes authority while giving
+individuals control, so it transforms how professional credentials are handled while being
+authenticated. The system establishes an easy and trusted method to verify career histories
+in portable format, which minimizes time and financial costs during hiring operations.
+The proposed framework allows HR departments to decrease their administrative work
+while shielding them from credential fraud and simultaneously fostering trust in employment
+market transactions. The initial section of this research describes its broad goals,
+followed by a description of the proposed information system.
+
+\section{Background}
+
+Digital credentialing has been researched in nearly all fields, yet most operational systems
+depend on either centralized portals or databases. The existing systems historically
+demonstrate weak connectivity between platforms, along with reduced visible data quality
+and vulnerability to modifications from within their infrastructure and hacking attempts.
+The presence of a single central authority in these systems creates a huge vulnerable
+point while damaging the trust in the system. A superior solution comes through Blockchain
+technology. Blockchain achieves decentralized control by spreading data through
+multiple separate network nodes while maintaining complete data accuracy. Record addition
+to blockchain creates an unalterable state because manipulation becomes nearly impossible,
+which results in an auditable source of truth. The system builds trust while permitting
+verified users to check data authenticity without depending on middle agents. The
+Proof-of-Stake (PoS) consensus works as a system to verify correct and agreed-upon
+blockchain entries on the platform. PoS selects validating nodes for new transactions
+based on their stakes rather than relying on computationally intensive procedures. The
+proposed system structure provides employees with an efficient, secure method to obtain
+and validate their experience certificates while offering complete assurance that the procedure
+does not depend on a single institution.
+
+\section{Research Objectives}
+
+The research develops a blockchain-based secure system for employee experience certificate
+verification. Current employee experience evaluation methods, consisting of phone
+calls, emails, and background checks, exist as a vulnerable combination of ineffective,
+time-consuming, and easily manipulated practices. The main objective is to build an
+encryption process with digital signature authentication that stores experience certificates
+on a blockchain. The information maintained by this process remains private while being
+authentic and tamper-proof. The authentication process for new employers occurs without
+their needing to contact the previous employer. This system utilizes a consortium
+blockchain while allowing entry only to verified and trusted employers into the network.
+The approach distributes the network in a manner that gives it enhanced security while
+maintaining control. The consensus algorithm proof-of-stake delivers safe and effective
+information verification for the network. The PoS verifiers operate differently from
+proof-of-work since their validators select based on stake ownership of network participants,
+thus providing both sustainability benefits and security resistance capabilities. This
+system provides employees with full authority over managing their credentials. A transaction
+ID with a decryption key goes to the employee for presenting to future employers to
+allow quick, isolated verification.
+
+\section{Thesis Structure}
+
+This thesis is organized into seven chapters:
+
+\begin{itemize}
+  \item \textbf{Chapter 1: Introduction}\\
+        Presents the background, research objectives, and outlines the thesis structure.
+
+  \item \textbf{Chapter 2: Literature Review}\\
+        Reviews existing work on blockchain, certificate verification systems, and
+        cryptographic methods.
+
+  \item \textbf{Chapter 3: Methodology}\\
+        Describes the proposed system model, including phases such as registration,
+        authentication, certificate generation, block addition, and verification.
+
+  \item \textbf{Chapter 4: Security Analysis}\\
+        Evaluates the system's security using cryptographic methods, digital signatures,
+        and consortium blockchain design.
+
+  \item \textbf{Chapter 5: Performance Analysis}\\
+        Analyzes system performance in terms of responsiveness, scalability, efficiency,
+        and comparison with traditional systems.
+
+  \item \textbf{Chapter 6: Discussion}\\
+        Discusses the system's impact, decentralization strategy, limitations, and its
+        potential to transform credential verification.
+
+  \item \textbf{Chapter 7: Conclusion}\\
+        Summarizes the contributions, technical strengths, and future applications of
+        the proposed framework.
+\end{itemize}
+
+%% ============================================================
+%%  CHAPTER 2 — LITERATURE REVIEW
+%% ============================================================
+\chapter{Literature Review}
+
+One of the notable contributions to blockchain data authentication and security is the
+``Blockchain-Based User Authentication and Data-Sharing Framework for Healthcare
+Industries'' presented by Preeti Soni et al.~\cite{soni2024}. This framework, BC-UADS,
+involves the secure sharing of electronic healthcare records (EHRs) between hospitals
+across a consortium blockchain. The authors resolve issues in ensuring the authenticity,
+transparency, and confidentiality of medical data through a high-strength authentication
+mechanism. The BC-UADS approach adds some innovative elements, such as the application
+of elliptic curve-based cryptography and a Proof-of-Reputation (PoR) consensus
+protocol, which is more effective and resource-friendly than existing protocols such as
+Proof-of-Work (PoW). The approach provides secure and efficient data-sharing between
+hospitals and mutual authentication between healthcare providers and patients.
+
+Suyel Namasudra et al.~\cite{namasudra2023} introduce a blockchain-based system designed
+to make medical certificate handling easier and more secure in IoT-driven healthcare.
+By using smart contracts and decentralized storage, their solution protects privacy,
+prevents tampering, and gives users quick, reliable access to their certificates without
+relying on a central authority.
+
+Priyadarshini et al.~\cite{priyadarshini2025} propose a blockchain-based system to make
+certificate authentication faster, more secure, and fully decentralized. By combining
+smart contracts, hash-based optimizations, and Bloom Filters, their framework cuts
+down verification time, prevents tampering, and removes reliance on central authorities,
+offering a reliable solution for credential validation.
+
+Kim et al.~\cite{kim2022} develop a blockchain system powered by artificial intelligence
+to tackle the problem of forged degree certificates. Their approach combines smart
+contracts, AI consensus algorithms, and deep learning models to secure, verify, and
+authenticate diplomas quickly and reliably, ensuring trust across decentralized and global
+academic networks.
+
+Gayathiri et al.~\cite{gayathiri2020} present a blockchain-based system for securing and
+validating academic and sports certificates. Their solution converts paper certificates
+into digital form, generates hash values using a chaotic algorithm, and stores them on
+a blockchain. A mobile application enables quick, offline certificate validation, ensuring
+authenticity and preventing tampering.
+
+M.\ Shakila et al.~\cite{shakila2023} explored a blockchain-driven approach to digital
+certificate validation, emphasizing its potential to counter certificate forgery through
+secure, tamper-proof records. Their system leverages smart contracts and SHA-256
+hashing to enhance transparency and trust while removing third-party dependencies.
+The study highlights blockchain's capability to transform academic credential verification
+with improved reliability, security, and scalability.
+
+Prathamesh Swami et al.~\cite{swami2024} presented DigiPramaan, a blockchain-based
+certificate management system that tackles the growing threat of counterfeit certificates.
+Their system integrates smart contracts, cryptographic hashing, and cloud storage to
+ensure certificates are secure, easily accessible, and verifiable. By emphasizing features
+like certificate revocation and bulk generation, they offer a user-friendly, efficient, and
+future-proof solution for credential management in the digital age.
+
+Irawan Afrianto et al.~\cite{afrianto2020} developed a blockchain-based system for verifying
+work training certificates using the Ethereum network and IPFS for secure document
+storage. Their approach addresses manual verification challenges and combats certificate
+forgery. By leveraging smart contracts and distributed file systems, they offer an
+efficient, transparent, and tamper-resistant method to simplify validation while enhancing
+trust and accessibility for users.
+
+G.\ Balamurugan et al.~\cite{balamurugan2023} proposed a blockchain-based system for
+secure academic certificate authentication, addressing challenges like document forgery
+and validation inefficiencies. By leveraging technologies such as Hyperledger, IPFS,
+smart contracts, and QR codes, they created a tamper-proof, decentralized framework
+that enhances trust, transparency, and ease of verification for educational and professional
+certificates.
+
+Yazan Abu Hammoudeh et al.~\cite{hammoudeh2023} conducted a detailed survey on the
+use of blockchain to validate digital certificates, highlighting blockchain's decentralization,
+transparency, and immutability as key tools against certificate fraud. Their work
+explores various blockchain-based models and solutions, demonstrating how this technology
+strengthens trust, enhances security, and simplifies the verification of critical personal
+and educational certificates in an increasingly digital world.
+
+Hrithik Gaikwad et al.~\cite{gaikwad2021} proposed a blockchain-based verification system
+to simplify and speed up the academic certificate validation process. By integrating
+Ethereum smart contracts, OCR technology, and a user-friendly web app, their solution
+tackles the manual bottlenecks and security risks of traditional methods. Their system
+offers a fast, scalable, and secure approach, significantly reducing verification time from
+days to mere seconds.
+
+Mega Adi Kusuma et al.~\cite{kusuma2022} designed a blockchain-based security system
+for digital land certificates in Indonesia, integrating smart contracts and QR code
+validation. Their solution tackles forgery, illegal levies, and centralized data vulnerabilities
+by decentralizing certificate storage and verification. By aligning with local legal
+frameworks and offering transparent, tamper-proof validation, the system enhances trust
+and streamlines land ownership registration processes.
+
+Swati Jadhav et al.~\cite{jadhav2024} introduced BlockVerify, a blockchain-based platform
+focused on secure e-certificate generation and validation. By combining Ethereum
+smart contracts, IPFS decentralized storage, and a user-friendly web interface, they
+offer a tamper-proof, transparent solution for verifying digital documents. Their work
+highlights how blockchain can eliminate fraud, ensure document authenticity, and simplify
+verification processes for individuals and organizations alike.
+
+Ankit K C et al.~\cite{ankitkc2024} proposed a blockchain-based system aimed at detecting
+fake physical certificates while also validating certificate issuers. Their model uses
+smart contracts and a transparent Ethereum-like blockchain to ensure certificate authenticity
+and prevent tampering. With features like secure certificate updates, revocation,
+and an integrated API, their solution emphasizes low-cost, efficient verification across
+multiple institutions in a decentralized environment.
+
+Fengjun Shang et al.~\cite{shang2025} proposed a blockchain-based data sharing framework
+aimed at enhancing privacy and security within the Internet of Vehicles (IoV). By
+integrating decentralized authentication, cluster head selection, and practical Byzantine
+fault tolerance, their scheme effectively counters attacks such as forgery and tampering.
+The work highlights notable performance improvements while ensuring secure, efficient,
+and trustworthy data sharing among connected vehicles.
+
+Igor Zikratov et al.~\cite{zikratov2017} proposed a blockchain-based framework to enhance
+data integrity and traceability in distributed systems. The model uses cryptographic
+hashing and decentralized ledgers to prevent unauthorized data modifications. Their
+approach, tested in domains like healthcare and digital forensics, showcases how blockchain
+can secure sensitive records and provide transparent audit trails. This supports its
+application in verification systems that demand strong data authenticity and tamper
+resistance.
+
+Ze Wang et al.~\cite{wang2022} present a blockchain-based architecture that improves
+transparency of certificates and revocations by storing metadata with both certificate
+and revocation events on a distributed ledger and proposes an append-only, verifiable
+log structure that eliminates issues such as dishonest Certificate Authorities (CAs) who
+propose dishonest information or censorship. The system allows domain owners and
+clients to loosely audit all certificate issuance events, revocation events and consequently
+also has a system to support accountability and security of certificates while improving
+existing Certificate Transparency (CT) systems.
+
+Sanjay Kumar Jena et al.~\cite{jena2024} propose a new blockchain-based framework for
+verifiable credential exchange based on Hyperledger Indy and Aries. The paper focuses
+on preserving data integrity, trust, and privacy, along with obtaining credibility in a
+decentralized system. The authors validated the model using a real-world case study in
+the health care sector that illustrated the model's capability to simplify credential
+issuance and verification processes, increase security, and reduce reliance on centralized
+identities.
+
+Aamna Tariq et al.~\cite{tariq2023} present Cerberus, a blockchain system for secure,
+transparent, and decentralized accreditation and degree verification. It establishes a
+framework that incorporates academic institutions' smart contracts to securely grant
+unalterable educational credentials. The framework further provides an efficient and
+trusted way to verify qualifications around the world without concerning misrepresentation
+and forgery of credentials based on Hyperledger Fabric blockchain technology.
+
+%% ============================================================
+%%  CHAPTER 3 — METHODOLOGY
+%% ============================================================
+\chapter{Methodology}
+
+\section{Proposed System Model}
+
+The proposed blockchain-based system for employee experience certificate verification
+features an architecture design that delivers security alongside reliability and decentralization,
+combined with user-friendly features. The illustration in Figure~\ref{fig:system_model}
+shows how the major entities (employee, company servers, and blockchain network) connect
+to perform their functions in the ecosystem. The following section explains the duties
+together with functionality and operational limits of these entities when operating within
+the complete model structure.
+
+The system operates using consortium blockchain technology that restricts blockchain
+node participation exclusively to authorized company server applications. The system
+increases security alongside trust between participants while improving effectiveness and
+scalability.
+
+The major entities in the proposed model are described in detail below:
+
+\begin{enumerate}
+  \item \textbf{Company Server ($CS_i$):} Each organization or enterprise that wishes to
+        participate in the employee experience verification ecosystem deploys a dedicated
+        company server, denoted as $CS_i$, where $1 \le i \le n$. These servers are responsible
+        for managing the employee registration, authentication, certificate issuance,
+        and interaction with the blockchain network. Each $CS_i$ maintains a unique
+        cryptographic identity consisting of a private key $s_i$ and a public key
+        $P_{CS_i} = s_i P$. The public key is shared and known among all participating
+        company servers within the consortium to facilitate trust and secure communication.
+        Additionally, each $CS_i$ acts as a node in the blockchain and actively participates
+        in consensus algorithms to validate transactions and append new blocks.
+
+  \item \textbf{Employee ($E_e$):} The employee, denoted as $E_e$, is the subject of the
+        experience verification process. $E_e$ is considered a former employee of some
+        company $C_i$ and seeks to obtain a digitally signed and verifiable experience
+        certificate from the company server $CS_i$. The employee interacts with the system
+        by first registering securely with the respective company server, then authenticating
+        himself/herself, and subsequently requesting the experience certificate. Upon
+        issuance, the employee retains two essential pieces of information: the symmetric
+        decryption key $P_{sec}$ used to encrypt the certificate, and the blockchain
+        transaction ID $T^{id}_x$, which points to the certificate stored on the blockchain.
+        These are shared with the new employer for subsequent verification of credentials.
+
+  \item \textbf{Blockchain Network:} The backbone of the proposed model is a permissioned
+        consortium blockchain that connects all the company servers $CS_i$. This blockchain
+        facilitates secure, immutable, and transparent storage of employee certificates,
+        which are encrypted and digitally signed. Only pre-approved, participating
+        organizations can become nodes in this network. These nodes are responsible for
+        validating new transactions, running the PoS consensus protocol, and maintaining
+        a synchronized copy of the ledger. The consortium nature of the blockchain ensures
+        that data is not exposed publicly, and only authorized parties have read and write
+        access. This guarantees the confidentiality and integrity of the certificate data
+        while leveraging the decentralized nature of the blockchain.
+\end{enumerate}
+
+The step-by-step workflow of the proposed model is as follows:
+
+The employee $E_e$ starts the secure registration process against the company server
+$CS_i$, which operates under the domain of their former employer $C_i$. An employee
+must complete cryptographic steps during registration and store the employee's
+pseudo-identity in $CS_i$. The login procedure generates a mutual session key $S_{ie}$
+that will support secure communication with the company server. After successful completion
+of the authentication process, the user $E_e$ sends a formal request for experience or
+service certification. Employee credentials are entered into the server $CS_i$, where the
+system checks employee records for verification of the request's authenticity. The
+verification process succeeds at $CS_i$, allowing the system to produce a formal experience
+certificate that includes employee information such as their name and job title, as well
+as employment duration and department data. The certificate content gets protected by a
+unique symmetric encryption key $P_{sec}$ as part of confidentiality measures. The key
+operates as sole knowledge for both $CS_i$ and the employee $E_e$. The certificate content
+is encrypted by the AES algorithm. After encryption at $CS_i$, the encrypted certificate
+is digitally signed through the utilization of $CS_i$'s private key $s_i$. The blockchain
+transaction from $CS_i$ contains an encrypted certificate together with its digital signature.
+The transaction is sent to the transaction pool (mempool), where a new validator waits
+for it to receive placement in a new block. A new block creation process begins after the
+PoS algorithm triggers once the transaction threshold of $\lambda$ is achieved. The
+blockchain receives and validates this block from other consortium nodes and adds it
+permanently to its system. When the block addition succeeds, $CS_i$ provides the employee
+with both the encryption key $P_{sec}$ and the blockchain transaction ID $T^{id}_x$.
+The employee requires nothing more than these two values to demonstrate their career
+credentials to future employers. The employee $E_e$ provides his credentials to initiate
+contact with a different employer. The employer can retrieve the encoded certificate and
+signature through the blockchain by using $T^{id}_x$ and then access the document contents
+through $P_{sec}$ for validation. The process allows verification to happen immediately
+without needing direct communication between the employee and the previous employer.
+
+\begin{figure}[h!]
+  \centering
+  % Replace with actual figure: \includegraphics[width=\textwidth]{fig3_1.png}
+  \fbox{\parbox{0.9\textwidth}{\centering\vspace{3cm}
+    [Figure: User authentication and certificate data sharing in blockchain framework]
+    \vspace{3cm}}}
+  \caption{User authentication and certificate data sharing in blockchain framework}
+  \label{fig:system_model}
+\end{figure}
+
+The proposed system model delivers employees with a risk-controlled and expandable
+system to produce and confirm credentials. The combined application of symmetric encryption
+techniques with digital signatures, together with blockchain immutability, enables the
+system model to establish privacy safeguards and non-repudiation capabilities for
+decentralized trust practices.
+
+\section{Proposed Framework}
+
+All five phases are shown in this part. The system uses Elliptic-curve cryptography (ECC)
+for various operations. Figures~\ref{fig:registration} and~\ref{fig:login} depict the
+complete step-by-step registration, login, and mutual authentication through visual
+diagrams showing the procedure of communication and computation between the entities.
+
+The framework is based on an elliptic curve denoted by
+$E(\mathbb{Z}_p): y^2 \equiv (x^3 + ax + b) \pmod{p}$, which is defined over a finite
+prime field $\mathbb{Z}_p$. A distinguished base point $P$ on the curve acts as the
+generator for ECC operations. Furthermore, the framework incorporates a cryptographically
+secure and collision-resistant hash function $h(\cdot): \{0,1\}^* \to \{0,1\}^l$
+such that $p \approx 2^l$. The elliptic curve $E(\mathbb{Z}_p)$, generator point $P$,
+and the hash function $h$ are global public parameters accessible to all participating
+company servers in the network.
+
+\begin{table}[h!]
+  \centering
+  \caption{Workflow Phases of the Proposed System}
+  \label{tab:workflow_phases}
+  \begin{tabular}{@{}cll@{}}
+    \toprule
+    \textbf{Phase} & \textbf{Name} & \textbf{Description} \\
+    \midrule
+    1 & Registration & Employee registration using ECC. \\
+    2 & Authentication & Login and mutual verification using cryptography properties. \\
+    3 & Certificate Generation & Employer generates and signs an encrypted \\
+      &                         & experience certificate. \\
+    4 & Block Addition & Certificate is added to the consortium blockchain. \\
+    5 & Verification & New employer verifies certificate authenticity \\
+      &              & and decrypts it securely. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Registration Phase}
+
+In the registration phase, an employee entity $E_e$ initiates the process by registering
+securely with a company server $CS_i$, where $1 \le i \le n$ and $n$ is the total number
+of companies in the system. This phase ensures that only legitimate and verifiable employees
+are enrolled in the blockchain-enabled experience verification network.
+
+The registration protocol proceeds as follows and is illustrated in Figure~\ref{fig:registration}:
+
+\begin{enumerate}
+  \item Initially, the employee $E_e$ selects a unique identifier $ID_e$ and a password
+        $PW_e$. To embed randomness and prevent replay attacks, $E_e$ also chooses a random
+        scalar $a \in \mathbb{Z}_p$. Let $t$ denote the current timestamp in milliseconds
+        to ensure message freshness. The employee computes an elliptic curve point $A = aP$
+        and a masked password
+        $PWD_e = PW_e \oplus h(t \| aP_{CS_i})$,
+        where $P_{CS_i}$ is the public key of the company server $CS_i$. Additionally,
+        the employee computes a verification hash
+        $V_1 = h(PW_e \| aP_{CS_i} \| ID_e)$
+        and transmits the tuple $\{ID_e, PWD_e, t, A, V_1\}$ to $CS_i$ over a secure
+        communication channel.
+
+  \item Upon receiving the registration request, $CS_i$ uses its private key $s$ to
+        compute $PW'_e = PWD_e \oplus h(t \| sA)$, thereby reconstructing the original
+        password. Next, it calculates $V'_1 = h(PW'_e \| sA \| ID_e)$ and verifies
+        whether $V'_1 \stackrel{?}{=} V_1$. If this equality does not hold, $CS_i$ aborts
+        the session due to authentication failure. If the verification passes, $CS_i$
+        continues by validating the timestamp freshness: it generates a new timestamp
+        $t'$ and ensures that $t' - t \le 300000$ milliseconds (5 minutes). If this
+        condition is not met, the registration attempt is considered stale and is aborted.
+
+  \item If all previous checks pass, $CS_i$ selects a new random value $b \in \mathbb{Z}_p$
+        and computes $B = bP$, a verifier $V_2 = h(PW'_e \| bA)$, an encrypted identity
+        $EID_e = h(ID_e \| s)$, and a transformed password
+        $PWD''_e = PW'_e \oplus h(sID_e)$. These values are securely stored in the
+        server's database as $\{EID_e, PWD''_e\}$ for future use. The server then
+        responds to $E_e$ with $\{V_2, B\}$.
+
+  \item Upon receiving $\{V_2, B\}$, the employee calculates $V'_2 = h(PW_e \| aB)$
+        and verifies whether $V'_2 \stackrel{?}{=} V_2$. If the verification is successful,
+        the employee concludes that the registration has been completed securely and
+        stores the credentials $\{ID_e, PW_e\}$ for later use in the login phase.
+        Otherwise, the session is aborted.
+\end{enumerate}
+
+\subsection{Login and Authentication Phase}
+
+This essential phase ensures that authorized users alone can interact with the system
+through authentication measures. Authentication between users is combined with session
+key development methods to prevent impersonation, replay attacks and man-in-the-middle
+intrusions.
+
+The sequence is as follows and illustrated in Figure~\ref{fig:login}:
+
+\begin{enumerate}
+  \item The employee $E_e$ inputs $ID_e$ and $PW_e$ into the login interface. A random
+        scalar $a \in \mathbb{Z}_p$ and current timestamp $t$ (in milliseconds) are generated.
+        The employee computes $A = aP$ and $PWD_e = PW_e \oplus h(t \| aP_{CS_i})$ to
+        mask the password. Then, $V_1 = h(PW_e \| aP_{CS_i} \| ID_e)$ is computed as
+        a credential hash. $E_e$ sends $\{ID_e, PWD_e, t, A, V_1\}$ to $CS_i$.
+
+  \item The server $CS_i$ recovers the password by computing
+        $PW'_e = PWD_e \oplus h(t \| sA)$, and recalculates
+        $V'_1 = h(PW'_e \| sA \| ID_e)$. If $V'_1 \ne V_1$, the authentication fails.
+        Otherwise, the server checks if the request is recent by verifying
+        $t' - t \le 300000$. If the request is stale, the session is aborted.
+
+  \item Using $ID_e$ and $s$, the server calculates $EID_e = h(ID_e \| s)$ and retrieves
+        the stored $PWD''_e$ associated with $EID_e$. It computes
+        $PWD'''_e = PW'_e \oplus h(sID_e)$ and verifies
+        $PWD'''_e \stackrel{?}{=} PWD''_e$. If the values mismatch, authentication fails.
+
+  \item If verified, $CS_i$ chooses a random scalar $b \in \mathbb{Z}_p$, computes
+        $B = bP$, and a verifier $V_2 = h(PW'_e \| bA)$. A session key
+        $SK_{ei} = h(ID_e \| bA \| sA)$ is derived. The server then responds to the
+        employee with $\{V_2, B\}$.
+
+  \item $E_e$ computes $V'_2 = h(PW_e \| aB)$ and checks whether
+        $V'_2 \stackrel{?}{=} V_2$. If the check passes, $E_e$ confirms the server's
+        legitimacy and computes the session key $SK_{ei} = h(ID_e \| aB \| aP_{CS_i})$.
+        Secure mutual authentication is now complete, and $SK_{ei}$ will be used for
+        subsequent encrypted communications.
+\end{enumerate}
+
+\begin{figure}[h!]
+  \centering
+  % Replace with actual figure: \includegraphics[width=0.9\textwidth]{fig3_2.png}
+  \fbox{\parbox{0.9\textwidth}{\centering\vspace{4cm}
+    [Figure: Employee Registration Protocol Diagram]\vspace{4cm}}}
+  \caption{Employee Registration: Secure parameter exchange between $E_e$ and $CS_i$}
+  \label{fig:registration}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  % Replace with actual figure: \includegraphics[width=0.9\textwidth]{fig3_3.png}
+  \fbox{\parbox{0.9\textwidth}{\centering\vspace{4cm}
+    [Figure: Employee Login and Authentication Protocol Diagram]\vspace{4cm}}}
+  \caption{Employee Login and Mutual Authentication Protocol between $E_e$ and $CS_i$}
+  \label{fig:login}
+\end{figure}
+
+\subsection{Certificate Generation Phase}
+
+The certificate generation phase is a vital part of the employee experience verification
+protocol. It ensures the authenticity, integrity, and confidentiality of the experience
+certificate issued by a previous employer upon request by the employee, denoted as $E_e$.
+This phase is only initiated after the employee has successfully authenticated with the
+employer's system via secure login mechanisms, as outlined in earlier stages.
+
+Once authenticated, the system begins the certificate issuance process upon receiving
+a valid request. The system validates employment-related metadata, including duration
+of employment, department, and job title. Let the experience certificate be denoted by
+$C$. The certificate encapsulates critical information such as the employee's name, job
+designation, department, and employment period (joining and exit dates). Since this
+data is sensitive and will be stored on a semi-public blockchain, it must be protected
+during transmission and storage. To ensure confidentiality, the certificate $C$ is encrypted
+using the AES algorithm with a secret key $P_{sec}$. The encryption operation is defined as:
+\[
+  C_{enc} = E_{enc}(P_{sec}, C)
+\]
+where $E_{enc}$ is the symmetric encryption function, and $C_{enc}$ is the encrypted
+form of $C$. This ensures that unauthorized entities cannot access the certificate content
+without the decryption key. Following encryption, the employer implements a digital
+signature mechanism based on the Elliptic Curve Digital Signature Algorithm (ECDSA)
+to establish authenticity and prevent repudiation. This hash value $H$ is a unique digest
+representing $C_{enc}$ and is collision-resistant and irreversible, making it suitable for
+signing. Next, the employer uses their private key $s_i$ to generate a digital signature
+$\sigma$ over the hash value $H$ using ECDSA:
+
+To sign the encrypted certificate $C_{enc}$, the signer performs the following steps:
+
+\begin{enumerate}
+  \item Compute the message hash: $H = h(C_{enc})$, using a cryptographic hash function
+        such as SHA-256.
+  \item Select a random integer $k \in \mathbb{Z}_p$.
+  \item Compute the elliptic curve point: $R = kP = (x_1, y_1)$.
+  \item Compute $r = x_1 \bmod p$. If $r = 0$, choose another $k$.
+  \item Compute $s = k^{-1}(H + s_i r) \bmod p$. If $s = 0$, choose another $k$.
+  \item The signature is the pair $\sigma = (r, s)$.
+\end{enumerate}
+
+\[
+  \sigma = \text{ECDSA\_Sign}_{s_i}(H)
+\]
+
+Here, $\text{ECDSA\_Sign}_{s_i}(H)$ is the ECDSA signing operation using private key
+$s_i$. The corresponding public key $P_{CS_i} = s_i P$, where $P$ is the base point on
+the elliptic curve, can be used by verifiers to validate the signature. At this point,
+the employer has two important components: the encrypted certificate $C_{enc}$ and its
+ECDSA digital signature $\sigma$. These are bundled into a certificate package:
+\[
+  (C_{enc},\, \sigma)
+\]
+This package maintains both the confidentiality of the certificate data and its verifiable
+authenticity. In the final stage, the certificate package $(C_{enc}, \sigma)$ is recorded
+on the blockchain. It is included in a transaction and broadcast to the consortium
+blockchain network, which uses Proof-of-Stake (PoS) consensus to validate and append
+new blocks. Once verified, the block containing the certificate package is added to the
+immutable ledger, making it publicly accessible and tamper-proof.
+
+The certificate generation phase thereby concludes with the secure issuance, authentication,
+and decentralized storage of the employee's experience certificate. This allows future
+employers or verification authorities to validate the certificate with strong cryptographic
+guarantees regarding its origin, integrity, and confidentiality.
+
+\subsection{Block Addition Phase}
+
+During the block addition phase, the employee's experience certificate stands important
+in both secure preservation and tamperproof recordkeeping. During the block addition
+phase, the former employer commences information storage procedures by adding encrypted
+certificate $C_{enc}$ together with digital signature $\sigma$ to a blockchain.
+
+In this phase, the employer, represented by the company server $CS_i$, encapsulates the
+cryptographic elements into a well-structured blockchain transaction. This encapsulation
+includes the encrypted experience certificate $C_{enc}$ and the digital signature $\sigma$,
+forming a certificate package denoted as $(C_{enc}, \sigma)$. This package becomes the
+payload of a new blockchain transaction intended to be recorded on the distributed ledger
+maintained by the consortium of participating organizations.
+
+The certificate package gets transmitted by the employer's server, which operates as a
+complete blockchain node, to the blockchain network's transaction pool. The transaction
+pool, called the ``mempool'', operates as a short-term storage facility where unconfirmed
+transactions wait to become part of a new block. Transactions submitted to the mempool
+must pass validation before blockchain ledger integration takes place.
+
+To add blocks to the chain, the blockchain network depends on a Proof-of-Stake (PoS)
+consensus protocol to select validator nodes from its network. PoS mechanisms function
+differently from PoW systems since they select validators based on the cryptocurrency
+stake that each node locks into their network. Such a consensus approach drives participants
+to behave honorably because it requires minimal power usage yet rewards faithful actions.
+
+As more transactions, including the one containing $(C_{enc}, \sigma)$, accumulate in
+the mempool, the network monitors for the threshold parameter $\lambda$, which represents
+the maximum number of transactions that can be included in a single block. Once the
+mempool reaches this predefined threshold $\lambda$, the consensus algorithm activates
+and selects a validator node based on the PoS strategy.
+
+The selected validator node aggregates $\lambda$ pending transactions from the mempool
+and begins the construction of a new block. This new block contains:
+
+\begin{itemize}
+  \item The list of $\lambda$ transactions (including the certificate package).
+  \item A timestamp denoting the exact time of block creation.
+  \item The hash of the previous block, thereby ensuring cryptographic linkage to the
+        prior state of the blockchain.
+  \item A Merkle root derived from the current block's transactions, enabling fast and
+        secure verification of any transaction within the block.
+  \item The validator's digital signature as proof of legitimate block creation.
+\end{itemize}
+
+The newly made block propagates through the blockchain network from the validator node
+to all additional nodes. Multiple nodes in the blockchain exactly verify new blocks
+through independent assessment based on transaction format validation, as well as digital
+signature checks combined with timestamp and hash value examination, along with Merkle
+root verification.
+
+Once blockchain nodes reach a consensus through majority agreement, the new proposed
+block joins the end of the blockchain ledger as a valid addition. By performing this act,
+the blockchain stores the certificate package $(C_{enc}, \sigma)$ permanently with
+unalterable characteristics. The experience certificate advances to a state where it serves
+as an auditable record that authorized stakeholders can verify. The processing network
+generates an identifier after block addition to protect the certificate package transaction.
+The blockchain creates a distinctive value referred to as the Transaction ID, which uses
+the notation $T^{id}_x$. The Transaction ID acts as both an index point and a pointer,
+which enables users to access and retrieve specific blockchain transactions at any future
+time.
+
+The final step of this phase involves secure communication between the former employer
+($CS_i$) and the employee ($E_e$). The employer transmits both the transaction identifier
+$T^{id}_x$ and a unique symmetric decryption key $P_{sec}$ to the employee. The
+transaction identifier allows for the location and viewing of the record on the blockchain,
+while the decryption key enables authorized verifiers to decrypt the certificate content,
+which was previously encrypted using $P_{sec}$. The block addition phase establishes
+secure, decentralized certification issuance for employee experience certificates.
+Blockchains deliver an unchangeable and verifiable professional history record, which
+allows trustless verification, diminishes fraud, and promotes operational compatibility
+between different organizational frameworks.
+
+\subsection{Certificate Verification Phase}
+
+The proposed decentralized authentication framework includes the certificate verification
+phase. Verification of certificates allows employers to confirm that documents originate
+from reputable sources while checking for alterations that would affect the validity of
+presented employee information.
+
+When an employee applies to a new organization or company and reaches the hiring or
+onboarding stage, the employer typically requests prior work experience verification. In
+this model, the employee furnishes two key pieces of data to the prospective employer:
+(1) the transaction identification number, denoted as $T^{id}_x$, and (2) the symmetric
+decryption key, denoted as $P_{sec}$. These two elements were previously provided to
+the employee by the former employer at the conclusion of the certificate generation and
+block addition phases.
+
+\paragraph{Step 1: Retrieval of Certificate Package.}
+The verification process begins with the use of the transaction identification number
+$T^{id}_x$. The new employer queries the blockchain using this transaction ID to retrieve
+the associated certificate package. This certificate package is denoted as $(C_{enc}, \sigma)$,
+where $C_{enc}$ is the encrypted version of the experience certificate, and $\sigma$ is
+the digital signature generated by the previous employer using its private key.
+
+\paragraph{Step 2: Verification of Authenticity and Non-repudiation through ECDSA.}
+Upon receiving the certificate package, the new employer must establish that the certificate
+was indeed issued by the claimed former employer. This step is essential for achieving
+non-repudiation, ensuring that the former employer cannot deny having issued the certificate.
+To verify the origin, the employer first computes a secure hash $H'$ over the encrypted
+certificate $C_{enc}$.
+
+The digital signature $\sigma$, previously generated using the Elliptic Curve Digital
+Signature Algorithm (ECDSA), is then verified using the public key of the former employer,
+denoted by $P_{CS_i}$. Given the public key $P_{CS_i}$ and the signature $\sigma = (r, s)$,
+the verifier proceeds as follows:
+
+\begin{enumerate}
+  \item Compute the message hash: $H' = h(C_{enc})$.
+  \item Verify that $r, s \in \mathbb{Z}_p$.
+  \item Compute $w = s^{-1} \bmod p$.
+  \item Compute $u_1 = H' \cdot w \bmod p$, $u_2 = r \cdot w \bmod p$.
+  \item Compute the elliptic curve point: $R = u_1 P + u_2 P_{CS_i} = (x_1, y_1)$.
+  \item The signature is valid if $r \equiv x_1 \pmod{p}$.
+\end{enumerate}
+
+Successful verification confirms that the certificate was signed using the private key
+corresponding to $Q$, thereby proving that it was issued by the legitimate former employer.
+This cryptographic proof guarantees non-repudiation: the signer (former employer) cannot
+later claim not to have signed the certificate, as only they possess the private key used
+to generate the signature. Failure in signature verification results in rejection of the
+certificate, as it indicates a mismatch in provenance or signature tampering.
+
+\paragraph{Step 3: Decryption of Encrypted Certificate.}
+A new employer needs access to the encrypted certificate to read the data contents because
+the document received encryption protection through symmetric encryption with AES. The
+user needs the symmetric key $P_{sec}$ to perform decryption because this key was
+previously distributed securely to the employee.
+
+The decryption operation is denoted as:
+\[
+  C = D_{dec}(P_{sec}, C_{enc})
+\]
+
+The decryption function $D_{dec}$, together with the symmetric key $P_{sec}$, results in
+the production of the detailed employment information contained in the plaintext
+certificate $C$. The encrypted details comprise essential employee data that includes job
+title, along with department affiliation and start and finish dates of employment, together
+with project involvement reports and performance assessments. Successful decryption
+provides the employer with access to assess both the complete scope and justified nature
+of the employee's professional background.
+
+\paragraph{Security and Integrity Considerations.}
+This entire certificate verification protocol ensures a high level of security and robustness:
+
+\begin{itemize}
+  \item \textbf{Confidentiality:} The certificate content remains encrypted and inaccessible
+        to unauthorized parties until the correct decryption key $P_{sec}$ is presented.
+  \item \textbf{Authenticity:} The verification of the signature with the public key
+        guarantees that the certificate was issued by the former employer.
+  \item \textbf{Decentralization:} The use of blockchain eliminates dependency on
+        centralized certificate authorities or third-party validation services.
+  \item \textbf{Non-repudiation:} The former employer cannot deny issuing the certificate
+        due to cryptographic proof tied to its private key.
+\end{itemize}
+
+The certificate verification process effectively demonstrates how blockchain credential
+systems function powerfully in enterprise credential verification operations. A combination
+of cryptographic primitives, which include digital signatures and symmetric encryption,
+together with decentralized ledgers, enables this system to create effective employee
+credential validation services among organizations. This system prevents certificate
+deception and fraudulent resumes while providing immediate checks that enhance the
+development of protected human resource management solutions.
+
+%% ============================================================
+%%  CHAPTER 4 — SECURITY ANALYSIS
+%% ============================================================
+\chapter{Security Analysis of the Proposed Framework}
+
+The proposed blockchain-based architecture for employee experience certification is
+robust against attacks of internal or external ethical hackers and has security protection
+assured through a layered combination of elliptic curve cryptography (ECC), symmetric
+AES encryption, ECDSA digital signature, and a consortium blockchain. This chapter
+has provided a detailed evaluation of the platform's immunity to a variety of potential
+security attacks, such as impersonation, reply, man-in-the-middle, and forgery attacks.
+The basic security is the ECC domain, where the elliptic curve
+$E(\mathbb{Z}_p): y^2 \equiv x^3 + ax + b \pmod{p}$ can be defined in the context of a
+prime field $\mathbb{Z}_p$ with the publicly known base point $P$. Each company server
+$CS_i$ has a unique private key $s_i \in \mathbb{Z}_p$ with its public key
+$P_{CS_i} = s_i P$ used in all the identity and signature verification.
+
+Employee login and registration both use challenge-response protocol which mask password
+using XOR operation and time-variant elliptic curve point derivations, for example
+$PWD_e = PW_e \oplus h(t \| aP_{CS_i})$ and using hash-based verification values like
+$V_1 = h(PW_e \| aP_{CS_i} \| ID_e)$. These computations guarantee semantic security
+and non-reusability of credentials since the addition of random scalars $a, b \in \mathbb{Z}_p$
+as well as fresh timestamps prevents offline dictionary and replay attacks.
+
+In addition, mutual authentication between $E_e$ and $CS_i$ ends up in a shared session
+key $SK_{ei} = h(ID_e \| abP \| asP)$ computable only by the effective subjects due to
+the hardness of the Elliptic Curve Diffie--Hellman problem (ECDHP). Confidentiality of
+experience certificate $C$ is maintained by applying a symmetric AES encryption operation
+$C_{enc} = E_{enc}(P_{sec}, C)$, where $P_{sec}$ is known to $E_e$ and $CS_i$. The
+integrity and non-repudiation certificates are ensured by ECDSA signatures
+$\sigma = (r, s)$ on hash digest $H = h(C_{enc})$, generated with a randomly selected
+value $k \in \mathbb{Z}_p$ key and private key $s_i$ where $r = x_1 \bmod p$ with
+$R = kP$, $s = k^{-1}(H + s_i r) \bmod p$. Checking $\sigma$ only relies on the public
+key $P_{CS_i}$ and guarantees origin authenticity under the philosophy of the elliptic
+curve discrete logarithm problem (ECDLP) hardness. Once posted to the consortium
+blockchain, the tuple $(C_{enc}, \sigma)$ is locked immutably across distributed nodes
+via Proof of Stake (PoS) consensus. This is enforced by the way blocks are connected
+cryptographically to each other by hash chaining, so no one server can tamper with the
+records without being discovered. The permissioned blockchain ledger keeps the data
+intact and limits access to only privileged validators. As a result, the ECC in combination
+with digital signatures and AES encryption, in addition to distributed validation, yields
+a robust architecture that survives a wide category of adversarial attacks.
+
+%% ============================================================
+%%  CHAPTER 5 — PERFORMANCE ANALYSIS
+%% ============================================================
+\chapter{Performance Analysis}
+
+The performance of the proposed blockchain-based certificate verification system can be
+discussed in terms of the architectural choices made and the cryptographic primitives
+used. This evaluation is a forecast in its execution and has its robustness based on such
+technologies as symmetric encryption, elliptic curve cryptography, consortium blockchain,
+and PoS. Responsiveness, computational proficiency, applicability, dependability, and a
+comparison with conventional systems have been discussed to indicate the potential
+benefits of operation and feasibility.
+
+The system is estimated to suggest significantly higher responsiveness compared to the
+conventional HR verification procedures. With legacy workflows, the verification of
+employment history through multiple intermediaries and old-fashioned communication
+induces delays of a few weeks to months. This difference can be observed in the proposed
+system, where the employee can share a transaction reference and decryption key with a
+new employer, after which the latter can prove the certificate directly using a blockchain
+lookup and cryptographic verification. Such a design is about almost real-time validation
+with the speed of a modern recruitment environment, and a seamless user experience.
+
+System computations in terms of cryptographic operations are chosen in a very well-mannered
+way to warrant effectiveness and security. Advanced Encryption Standard (AES) is used
+to encrypt the contents of certificates, providing encryption and decryption at high
+speed and with low processing overhead for applications that run in real time. Elliptic
+Curve Digital Signature Algorithm ensures high authentication with minimal key length
+compared to RSA and thus lowers the cost of signature verification. Such choices make
+the system fend off unforeseen access while maintaining the system's lightweight processes
+even with a significant number of certificate verification requests.
+
+The framework also shows a consideration of resource efficiency. The ability to pack the
+cryptographic data will ensure that the system is providing long-term sustainability due
+to the compact nature of the data. Besides, transaction validation implies deterministic
+steps and minimal loading of verifying nodes, permitting even organizations with spare
+computing infrastructure. This promotes system inclusiveness without the compromise of
+speed and security. A key strength of the system is decentralized availability and
+operating distinctness from the presence of the issuer 24 hours a day, seven days a week.
+After the validation of a certificate has been made, its integrity and availability are
+preserved even if the issuing employer is no longer operating. This eliminates the risk of
+inability to verify, and this may arise from the closure of the companies and loss of data.
+
+The supposed blockchain characteristics of inherent immutability and transparency
+continue to endear the system toward tamper resistance and unauthorized modification of
+data, hence contributing to its trustworthiness and integrity of data movement over time.
+When compared theoretically to conventional verification systems, the expected performance
+of the proposed framework is higher on the criteria shown in Table~\ref{tab:comparison}.
+
+\begin{table}[h!]
+  \centering
+  \caption{Comparison Between Traditional and Blockchain-Based Certificate Systems}
+  \label{tab:comparison}
+  \begin{tabular}{@{}p{4cm}p{4.5cm}p{5cm}@{}}
+    \toprule
+    \textbf{Metric} & \textbf{Traditional System} & \textbf{Proposed Blockchain Framework} \\
+    \midrule
+    Verification Time & High (Manual Delays) & Low (Automated Real-Time) \\
+    Third-party Dependence & Required (HR/Email Follow-up) & Not Required (Self-Sovereign Verification) \\
+    Tamper-proof Data & No (Editable Databases) & Yes (Immutable Ledger) \\
+    Certificate Ownership & Centralized (HR Systems) & Decentralized \\
+    Security Level & Moderate (Limited Cryptography) & High (AES, ECC, ECDSA) \\
+    Scalability & Limited (Manual Bottlenecks) & High (PoS, Consortium Nodes) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Traditional systems are mostly manual and centralized, thus slow with a high risk of
+errors and more likely to have their data corrupted. On the other hand, the blockchain
+approach consolidates automation, distributed trust, and cryptographic security in one
+place. The architecture provided creates a basis for a high-performance and dependable
+credential verification system.
+
+%% ============================================================
+%%  CHAPTER 6 — DISCUSSION
+%% ============================================================
+\chapter{Discussion}
+
+The digital age raises enduring problems in the trustworthy admissibility of professional
+qualifications, particularly in industries in which traditional authentication processes are
+either slow, disorganised, or likely to be falsified. The authentication of employee
+experience certifications still faces the risk of tampering, delays with institutions, and
+poor interoperability despite digital document transmission. This research presents a
+blockchain-based credential verification framework that uses Asymmetric and Symmetric
+cryptographic primitives, a decentralized trust structure, and consortium governance
+models in order to address these issues comprehensively.
+
+Use of ECDSA signatures gives non-repudiation, and AES encryption provides confidentiality
+by means of the user's specific symmetric key $P_{sec}$ that is only shared between the
+issuer and the certificate's owner. Assigning block creation to trusted employers and
+regulatory agencies in a Consortium blockchain framework provides for controlled
+disintermediation, getting rid of the chaos of public blockchain.
+
+The system only works if there is a big ecosystem-wide adoption --- without organizations
+entering and joining continuously. Furthermore, key management has difficulties; if an
+employee loses the private decryption key $P_{sec}$, recovery of their certificate is
+never feasible due to the zero-knowledge property of the design. Scalability and latency
+will continue to be areas for improvement over time, principally as the user base grows.
+On top of that, interoperability with legacy HR systems and compliance with regional
+labor law and data privacy regulations are key to real-world implementation. The system
+needs to be adjustable depending on the care of legal frameworks to ensure the legality
+of blockchain-authenticated digital certification.
+
+The model not only prevents fraudulent activities but also uses a completely transparent,
+fair, and highly efficient employment verification system, which is in line with a developed
+digital economy. This work enables practitioners to apply these identity proof principles
+beyond Labor Market Instances such as Academic qualification, Certification, license,
+and Health records, and sets up a future-proof foundation for Decentralized Digital Trust.
+
+%% ============================================================
+%%  CHAPTER 7 — CONCLUSION
+%% ============================================================
+\chapter{Conclusion}
+
+This thesis presents a safe, scalable, user-centric blockchain-based system for authenticating
+employees' experience certificates against the shortcomings of the present credential
+verification systems. The security mechanism provides integrity, privacy, and nonrepudiation
+by employing cryptographic methods such as elliptic curve cryptography, symmetric
+encryption, and digital signatures along with a consortium blockchain infrastructure
+headed by key trusted parties. Utilizing a Proof-of-Stake consensus mechanism provides
+energy efficiency. The model returns all the ownership of the credentials back to the
+employee and enables them to share with security and authenticity with their previous
+employer. It can be noted that there is hardly any increase in the use of cryptography,
+and that verification is fast, thus making the solution scalable for organizations of varying
+sizes. Employment credentials are only a part of application domains; the design stretches
+out to other areas of use, which include Academic records. The availability of trustworthy
+plays a crucial role because both employment credentials and academic records are
+cross-domain objects. This work gives a practical touch point where the credential system
+can be implemented to meet modern security, privacy, and usability characteristics.
+
+%% ============================================================
+%%  BIBLIOGRAPHY
+%% ============================================================
+\begin{thebibliography}{99}
+
+\bibitem{soni2024}
+P.~Soni, S.~H.~Islam, A.~K.~Pal, N.~Mishra, and D.~Samanta,
+``Blockchain-based user authentication and data-sharing framework for healthcare industries,''
+\textit{IEEE Transactions on Network Science and Engineering}, vol.~11, no.~4,
+pp.~3623--3638, 2024.
+
+\bibitem{namasudra2023}
+S.~Namasudra, P.~Sharma, R.~G.~Crespo, and V.~Shanmuganathan,
+``Blockchain-based medical certificate generation and verification for iot-based healthcare systems,''
+\textit{IEEE Consumer Electronics Magazine}, vol.~12, no.~2, pp.~83--93, 2023.
+
+\bibitem{priyadarshini2025}
+R.~Priyadarshini, R.~Pandey, K.~C.~Ankit, D.~Bhandari, B.~Khadka,
+R.~Kumar~Barik, and M.~Jyoti~Saikia,
+``A faster, integrated, and trusted certificate authentication and issuer validation system based on blockchain,''
+\textit{IEEE Access}, vol.~13, pp.~27037--27049, 2025.
+
+\bibitem{kim2022}
+S.-K.~Kim,
+``Blockchain smart contract to prevent forgery of degree certificates: Artificial intelligence consensus algorithm,''
+\textit{Electronics}, vol.~11, no.~14, 2022.
+
+\bibitem{gayathiri2020}
+A.~Gayathiri, J.~Jayachitra, and S.~Matilda,
+``Certificate validation using blockchain,''
+in \textit{Proc.\ 2020 7th Int.\ Conf.\ Smart Structures and Systems (ICSSS)}, pp.~1--4, 2020.
+
+\bibitem{shakila2023}
+M.~Shakila and A.~Rama,
+``Design and analysis of digital certificate verification and validation using blockchain-based technology,''
+in \textit{Proc.\ 2023 Eighth Int.\ Conf.\ Science Technology Engineering and Mathematics (ICONSTEM)},
+pp.~1--9, 2023.
+
+\bibitem{swami2024}
+P.~Swami, K.~Vhatkar, Y.~Ambekar, K.~Singh, and Y.~Kaware,
+``Digipramaan: Blockchain based certificate management system,''
+in \textit{Proc.\ 2024 8th Int.\ Conf.\ Computing, Communication, Control and Automation (ICCUBEA)},
+pp.~1--6, 2024.
+
+\bibitem{afrianto2020}
+I.~Afrianto and Y.~Heryanto,
+``Design and implementation of work training certificate verification based on public blockchain platform,''
+in \textit{Proc.\ 2020 Fifth Int.\ Conf.\ Informatics and Computing (ICIC)}, pp.~1--8, 2020.
+
+\bibitem{balamurugan2023}
+G.~Balamurugan and K.~K.~A.~Sahayaraj,
+``A blockchain based certificate authentication system,''
+in \textit{Proc.\ 2023 Int.\ Conf.\ Computer Communication and Informatics (ICCCI)}, pp.~1--7, 2023.
+
+\bibitem{hammoudeh2023}
+Y.~A.~Hammoudeh, M.~Qatawneh, O.~AbuAlghanam, and M.~A.~Almaiah,
+``Digital certificate validation using blockchain: A survey,''
+in \textit{Proc.\ 2023 Int.\ Conf.\ Information Technology (ICIT)}, pp.~506--510, 2023.
+
+\bibitem{gaikwad2021}
+H.~Gaikwad, N.~D'Souza, R.~Gupta, and A.~K.~Tripathy,
+``A blockchain-based verification system for academic certificates,''
+in \textit{Proc.\ 2021 Int.\ Conf.\ System, Computation, Automation and Networking (ICSCAN)},
+pp.~1--6, 2021.
+
+\bibitem{kusuma2022}
+M.~A.~Kusuma, P.~Sukarno, and A.~A.~Wardana,
+``Security system for digital land certificate based on blockchain and qr code validation in indonesia,''
+in \textit{Proc.\ 2022 Int.\ Conf.\ Advanced Creative Networks and Intelligent Systems (ICACNIS)},
+pp.~1--6, 2022.
+
+\bibitem{jadhav2024}
+S.~Jadhav, D.~Jadhav, S.~Jadhav, J.~Shelke, and D.~Kakade,
+``Block verify: Generation and validation of e-certificate using blockchain,''
+in \textit{Proc.\ 2024 Second Int.\ Conf.\ Advanced Computing Communication Technologies (ICACCTech)},
+pp.~180--187, 2024.
+
+\bibitem{ankitkc2024}
+A.~K.~C, D.~Bhandari, R.~Priyadarshini, and P.~K.~Meher,
+``Detection of fake physical certificates using a blockchain-based certificate verification and issuer validation system,''
+in \textit{Proc.\ 2024 IEEE Int.\ Conf.\ Blockchain and Distributed Systems Security (ICBDS)},
+pp.~1--6, 2024.
+
+\bibitem{shang2025}
+F.~Shang and X.~Deng,
+``A data sharing scheme based on blockchain for privacy protection certification of internet of vehicles,''
+\textit{Vehicular Communications}, vol.~51, p.~100864, 2025.
+
+\bibitem{zikratov2017}
+I.~Zikratov, A.~Kuzmin, V.~Akimenko, V.~Niculichev, and L.~Yalansky,
+``Ensuring data integrity using blockchain technology,''
+in \textit{Proc.\ 2017 20th Conf.\ Open Innovations Association (FRUCT)}, pp.~534--539, 2017.
+
+\bibitem{wang2022}
+Z.~Wang, J.~Lin, Q.~Cai, Q.~Wang, D.~Zha, and J.~Jing,
+``Blockchain-based certificate transparency and revocation transparency,''
+\textit{IEEE Transactions on Dependable and Secure Computing}, vol.~19, no.~1, pp.~681--697, 2022.
+
+\bibitem{jena2024}
+S.~K.~Jena, R.~C.~Barik, and R.~Priyadarshini,
+``A systematic state-of-art review on digital identity challenges with solutions using conjugation of iot and blockchain in healthcare,''
+\textit{Internet of Things}, vol.~25, p.~101111, 2024.
+
+\bibitem{tariq2023}
+A.~Tariq, H.~Binte~Haq, and S.~T.~Ali,
+``Cerberus: A blockchain-based accreditation and degree verification system,''
+\textit{IEEE Transactions on Computational Social Systems}, vol.~10, no.~4,
+pp.~1503--1514, 2023.
+
+\end{thebibliography}
+
+\end{document}
